@@ -12,7 +12,7 @@
   :root {
     --felt: #cfe0c4;
     --cream: #F1DFC1;
-    --ink: #0A0A0A;
+    --ink: #123617;
     --cw: 182px;        /* card width */
     --ch: 266px;        /* card height (~0.686 ratio) */
   }
@@ -125,7 +125,7 @@
     text-align: center;
     font-family: "EB Garamond", Garamond, serif;
     font-style: italic; font-weight: 400;
-    font-size: 11px; color: #2a2a2a;
+    font-size: 11px; color: #123617;
   }
 
   /* ---------- CONTROLS ---------- */
@@ -171,10 +171,10 @@
     const rand = (a, b) => a + Math.random() * (b - a);
 
     const CLUB = `<svg class="club" viewBox="0 0 18 20" xmlns="http://www.w3.org/2000/svg">
-      <path d="M4.46609 3.77026C1.9945 -0.0447168 7.73548 -1.38383 8.90262 1.72729C10.0697 -1.38392 15.8109 -0.0448041 13.3391 3.77026L8.90262 10.3025L4.46609 3.77026Z" fill="#0A0A0A"/>
-      <path d="M14.0347 5.59854C17.8494 3.12731 19.1885 8.86778 16.0776 10.0351C19.1887 11.2022 17.8497 16.9433 14.0347 14.4716L7.50146 10.0351L14.0347 5.59854Z" fill="#0A0A0A"/>
-      <path d="M3.77002 14.4719C-0.0448664 16.9434 -1.38391 11.2026 1.72705 10.0354C-1.38389 8.86818 -0.0448457 3.12747 3.77002 5.59889L10.3022 10.0354L3.77002 14.4719Z" fill="#0A0A0A"/>
-      <path d="M8.90283 10.3042L8.77794 12.1265C8.60703 14.6203 9.40775 17.0835 11.0124 19.0002" stroke="#0A0A0A" stroke-width="1.05097" stroke-linecap="round" fill="none"/>
+      <path d="M4.46609 3.77026C1.9945 -0.0447168 7.73548 -1.38383 8.90262 1.72729C10.0697 -1.38392 15.8109 -0.0448041 13.3391 3.77026L8.90262 10.3025L4.46609 3.77026Z" fill="currentColor"/>
+      <path d="M14.0347 5.59854C17.8494 3.12731 19.1885 8.86778 16.0776 10.0351C19.1887 11.2022 17.8497 16.9433 14.0347 14.4716L7.50146 10.0351L14.0347 5.59854Z" fill="currentColor"/>
+      <path d="M3.77002 14.4719C-0.0448664 16.9434 -1.38391 11.2026 1.72705 10.0354C-1.38389 8.86818 -0.0448457 3.12747 3.77002 5.59889L10.3022 10.0354L3.77002 14.4719Z" fill="currentColor"/>
+      <path d="M8.90283 10.3042L8.77794 12.1265C8.60703 14.6203 9.40775 17.0835 11.0124 19.0002" stroke="currentColor" stroke-width="1.05097" stroke-linecap="round" fill="none"/>
     </svg>`;
 
     async function loadDeck() {
@@ -215,6 +215,7 @@
 
     const stage = document.getElementById('stage');
     let topZ = 100;
+    let busy = false;
 
     function scatter(slots) {
       const W = innerWidth, H = innerHeight;
@@ -250,6 +251,68 @@
       });
     }
 
+    const delay = ms => new Promise(r => setTimeout(r, ms));
+
+    // gather into a stack -> riffle a couple times -> deal back out
+    async function shuffle(slots) {
+      if (busy) return;
+      busy = true;
+      stage.style.pointerEvents = 'none';
+      const W = innerWidth, H = innerHeight, cx = W / 2, cy = H / 2;
+
+      // 1) collect to a neat face-down stack
+      slots.forEach((s, i) => {
+        s.querySelector('.card').classList.remove('flipped');
+        s.style.transition = 'left .32s ease, top .32s ease, transform .32s ease';
+        s.style.left = cx + 'px';
+        s.style.top = cy + 'px';
+        s.style.setProperty('--rot', rand(-2, 2).toFixed(1) + 'deg');
+        s.style.zIndex = i;
+      });
+      await delay(340);
+
+      // 2) riffle: split into two halves, fan apart, snap back & interleave
+      for (let pass = 0; pass < 2; pass++) {
+        slots.forEach((s, i) => {
+          const side = i % 2 === 0 ? -1 : 1;
+          s.style.transition = 'left .16s ease-out, top .16s ease-out, transform .16s ease-out';
+          s.style.left = (cx + side * 96) + 'px';
+          s.style.top = (cy - 14) + 'px';
+          s.style.setProperty('--rot', (side * 9).toFixed(1) + 'deg');
+        });
+        await delay(170);
+        slots.forEach((s, i) => {
+          s.style.transition = 'left .16s ease-in, top .16s ease-in, transform .16s ease-in';
+          s.style.left = cx + 'px';
+          s.style.top = cy + 'px';
+          s.style.setProperty('--rot', rand(-3, 3).toFixed(1) + 'deg');
+          s.style.zIndex = (i % 2) * slots.length + i;   // interleave the stacking order
+        });
+        await delay(170);
+      }
+
+      // 3) deal back out into a fresh scatter, one after another
+      const n = slots.length, perRow = Math.ceil(n / 2);
+      const order = slots.map((_, i) => i).sort(() => rand(-1, 1)); // deal in random order
+      order.forEach((idx, k) => {
+        const s = slots[idx];
+        const row = idx < perRow ? 0 : 1, col = idx % perRow;
+        const x = 50 + (col - (perRow - 1) / 2) * 12 + rand(-3.5, 3.5);
+        const y = (row === 0 ? 43 : 60) + rand(-4, 4);
+        const d = k * 45;
+        s.style.transition = `left .42s cubic-bezier(.2,.8,.2,1) ${d}ms, top .42s cubic-bezier(.2,.8,.2,1) ${d}ms, transform .42s cubic-bezier(.2,.8,.2,1) ${d}ms`;
+        s.style.left = (x / 100 * W) + 'px';
+        s.style.top = (y / 100 * H) + 'px';
+        s.style.setProperty('--rot', rand(-22, 22).toFixed(1) + 'deg');
+        s.style.zIndex = k;
+      });
+      await delay(420 + n * 45 + 60);
+
+      slots.forEach(s => s.style.transition = '');   // back to the default CSS transition
+      stage.style.pointerEvents = '';
+      busy = false;
+    }
+
     function build(deck) {
       stage.innerHTML = '';
       const slots = deck.map((c, i) => {
@@ -278,7 +341,7 @@
 
     let SLOTS = [];
     document.getElementById('ordered').addEventListener('click', () => ordered(SLOTS));
-    document.getElementById('reshuffle').addEventListener('click', () => scatter(SLOTS));
+    document.getElementById('reshuffle').addEventListener('click', () => shuffle(SLOTS));
     document.getElementById('flipdown').addEventListener('click', () =>
       SLOTS.forEach(s => s.querySelector('.card').classList.remove('flipped')));
 
