@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Ireland deck — scattered cards</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --felt: #cfe0c4;
+    --cream: #F1DFC1;
+    --ink: #0A0A0A;
+    --cw: 182px;        /* card width */
+    --ch: 266px;        /* card height (~0.686 ratio) */
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+
+  body {
+    background: var(--felt) url("backdrop.webp") center / cover no-repeat fixed;
+    font-family: ui-monospace, "Space Mono", monospace;
+    overflow: hidden;
+    user-select: none;
+  }
+  /* darken the backdrop (cards sit above this and stay bright) */
+  body::before {
+    content: "";
+    position: fixed; inset: 0; pointer-events: none;
+    background:
+      linear-gradient(rgba(14,34,24,.32), rgba(14,34,24,.32)),
+      radial-gradient(120% 120% at 50% 42%, rgba(0,0,0,0) 55%, rgba(0,0,0,.45));
+  }
+
+  /* ---------- SCATTER STAGE ---------- */
+  .stage { position: fixed; inset: 0; }
+
+  .slot {
+    position: absolute;
+    width: var(--cw); height: var(--ch);
+    margin: calc(var(--ch) / -2) 0 0 calc(var(--cw) / -2);  /* center on its left/top point */
+    perspective: 1000px;
+    cursor: pointer;
+    transition: left .6s cubic-bezier(.2,.8,.2,1), top .6s cubic-bezier(.2,.8,.2,1),
+                transform .6s cubic-bezier(.2,.8,.2,1);
+    transform: rotate(var(--rot, 0deg));
+    animation: fade .5s ease both;
+  }
+  .slot:hover { z-index: 999 !important; }
+
+  .card {
+    position: absolute; inset: 0;
+    transform-style: preserve-3d;
+    transition: transform .6s cubic-bezier(.5,0,.2,1);
+    transform: rotateY(0deg);
+  }
+  .card.flipped { transform: rotateY(180deg); }
+
+  .face {
+    position: absolute; inset: 0;
+    backface-visibility: hidden; -webkit-backface-visibility: hidden;
+    border-radius: 9px; overflow: hidden;
+    /* soft, even "scanned on paper" shadow */
+    box-shadow: 0 2px 5px rgba(0,0,0,.14), 0 8px 20px -6px rgba(0,0,0,.22);
+    background: #fff;
+  }
+  .face.front { transform: rotateY(180deg); }
+  .face.back  { transform: rotateY(0deg); background: #fff; }
+  /* etched landscape fills the whole card back */
+  .face .full { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+  @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+
+  /* ---------- GENERATED CARD FACE ---------- */
+  .ace { position: absolute; inset: 0; background: #fff; }
+  /* subtle halftone print texture across the whole card (paper + photo) so it reads as one printed object */
+  .ace::after {
+    content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 5;
+    background-image: radial-gradient(circle, rgba(28,26,14,.55) 0.45px, transparent 0.6px);
+    background-size: 3px 3px;
+    mix-blend-mode: multiply;
+    opacity: .12;
+  }
+
+  .pip {
+    position: absolute;
+    display: flex; flex-direction: column; align-items: center;
+    line-height: .82; color: var(--ink);
+  }
+  .pip.tl { top: 8px; left: 9px; }
+  .pip.br { bottom: 8px; right: 9px; transform: rotate(180deg); }
+
+  .rank { font-family: "EB Garamond", Garamond, serif; font-weight: 500; font-size: 14px; }
+  .club { width: 9px; height: auto; margin-top: 2px; display: block; }
+
+  .photo {
+    position: absolute;
+    top: 11%; left: 10%; right: 10%; height: 76%;
+    border-radius: 5px; overflow: hidden;
+    background: #e8e8e8;
+  }
+  .photo img {
+    width: 100%; height: 100%; object-fit: cover; display: block;
+    /* gently aged: a little muted + warm, not punchy */
+    filter: contrast(1.05) saturate(1.02) brightness(1.02) sepia(.12);
+  }
+  .photo::before {
+    content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 2;
+    mix-blend-mode: overlay;
+    background: radial-gradient(118% 118% at 50% 36%,
+      rgba(255,205,128,.20) 0%, rgba(255,168,86,.05) 44%, rgba(12,16,32,.22) 100%);
+  }
+  .photo::after {
+    content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 3;
+    opacity: .3; mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size: 90px 90px;
+  }
+
+  .caption {
+    position: absolute; left: 0; right: 0; bottom: 6.4%;
+    text-align: center;
+    font-family: "EB Garamond", Garamond, serif;
+    font-style: italic; font-weight: 400;
+    font-size: 11px; color: #2a2a2a;
+  }
+
+  /* ---------- CONTROLS ---------- */
+  .controls {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+    display: flex; align-items: center; gap: 12px;
+    background: rgba(20,40,28,.5); border: 1px solid rgba(241,223,193,.3);
+    padding: 9px 14px; border-radius: 999px;
+    font-size: 12px; color: var(--cream); backdrop-filter: blur(8px);
+  }
+  .controls button {
+    font: inherit; color: var(--cream); background: transparent;
+    border: 1px solid rgba(241,223,193,.45); border-radius: 999px;
+    padding: 5px 12px; cursor: pointer;
+  }
+  .controls button:hover { background: rgba(241,223,193,.16); }
+
+  @media (prefers-reduced-motion: reduce) { .slot, .card { transition: none; animation: none; } }
+</style>
+</head>
+<body>
+
+  <div class="stage" id="stage"></div>
+
+  <div class="controls">
+    <button id="ordered">Ordered</button>
+    <button id="reshuffle">reshuffle</button>
+    <button id="flipdown">flip all down</button>
+  </div>
+
+  <script>
+    const DIR  = "photos/";
+    const BACK = "backdrop.webp";
+    const RANKS = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
+    const FALLBACK = [
+      "1 Achill Island, Ireland.jpg","2 Cliffs of Moher, Ireland.jpg","3 Westport, Ireland.jpg",
+      "5 Tullamore, Ireland.jpg","6 Galway, Ireland.jpg","7 Galway, Ireland.jpg",
+      "4 Co. Offaly, Ireland.jpg","8 Westport, Ireland.jpg","9 Achill Island, Ireland.jpg",
+      "10 Tullamore, Ireland.jpg",
+    ];
+    const enc = p => encodeURI(p);
+    const rankFor = i => i < RANKS.length ? RANKS[i] : String(i + 1);
+    const rand = (a, b) => a + Math.random() * (b - a);
+
+    const CLUB = `<svg class="club" viewBox="0 0 18 20" xmlns="http://www.w3.org/2000/svg">
+      <path d="M4.46609 3.77026C1.9945 -0.0447168 7.73548 -1.38383 8.90262 1.72729C10.0697 -1.38392 15.8109 -0.0448041 13.3391 3.77026L8.90262 10.3025L4.46609 3.77026Z" fill="#0A0A0A"/>
+      <path d="M14.0347 5.59854C17.8494 3.12731 19.1885 8.86778 16.0776 10.0351C19.1887 11.2022 17.8497 16.9433 14.0347 14.4716L7.50146 10.0351L14.0347 5.59854Z" fill="#0A0A0A"/>
+      <path d="M3.77002 14.4719C-0.0448664 16.9434 -1.38391 11.2026 1.72705 10.0354C-1.38389 8.86818 -0.0448457 3.12747 3.77002 5.59889L10.3022 10.0354L3.77002 14.4719Z" fill="#0A0A0A"/>
+      <path d="M8.90283 10.3042L8.77794 12.1265C8.60703 14.6203 9.40775 17.0835 11.0124 19.0002" stroke="#0A0A0A" stroke-width="1.05097" stroke-linecap="round" fill="none"/>
+    </svg>`;
+
+    async function loadDeck() {
+      let files;
+      // 1) manifest (works on any static host) -> 2) live dir listing (local dev) -> 3) hardcoded fallback
+      try {
+        const res = await fetch('photos.json', { cache: 'no-store' });
+        if (!res.ok) throw new Error('no manifest');
+        files = await res.json();
+        if (!files.length) throw new Error('empty manifest');
+      } catch (e1) {
+        try {
+          const res = await fetch(enc(DIR));
+          const doc = new DOMParser().parseFromString(await res.text(), 'text/html');
+          files = [...doc.querySelectorAll('a')].map(a => a.getAttribute('href'))
+            .filter(h => h && /\.(jpe?g|png|webp|avif)$/i.test(h) && !h.endsWith('/'))
+            .map(h => decodeURIComponent(h.split('/').pop()));
+          if (!files.length) throw new Error('empty');
+        } catch (e2) { files = FALLBACK.slice(); }
+      }
+      const items = files.map(f => {
+        const name = f.replace(/\.[^.]+$/, '');
+        const m = name.match(/^\s*(\d+)\s+(.*)$/);
+        return { order: m ? +m[1] : 9999, caption: m ? m[2] : name, file: f };
+      }).sort((a, b) => a.order - b.order || a.caption.localeCompare(b.caption));
+      // rank comes from the filename's leading number (1->A, 10->10); fall back to position
+      items.forEach((it, i) => it.rank = it.order < 9999 ? rankFor(it.order - 1) : rankFor(i));
+      return items;
+    }
+
+    const pip = rank => `<span class="rank">${rank}</span>${CLUB}`;
+    const cardFaceHTML = c => `<div class="ace">
+        <div class="pip tl">${pip(c.rank)}</div>
+        <div class="pip br">${pip(c.rank)}</div>
+        <div class="photo"><img src="${enc(DIR + c.file)}" alt="${c.caption}"></div>
+        <div class="caption">${c.caption}</div>
+      </div>`;
+
+    const stage = document.getElementById('stage');
+    let topZ = 100;
+
+    function scatter(slots) {
+      const W = innerWidth, H = innerHeight;
+      const n = slots.length;
+      const perRow = Math.ceil(n / 2);
+      slots.forEach((slot, i) => {
+        const row = i < perRow ? 0 : 1;
+        const col = i % perRow;
+        const x = 50 + (col - (perRow - 1) / 2) * 12 + rand(-3.5, 3.5);
+        const y = (row === 0 ? 43 : 60) + rand(-4, 4);
+        slot.style.left = (x / 100 * W) + 'px';
+        slot.style.top = (y / 100 * H) + 'px';
+        slot.style.setProperty('--rot', rand(-22, 22).toFixed(1) + 'deg');
+        slot.style.zIndex = i;
+      });
+    }
+
+    function ordered(slots) {
+      const n = slots.length;
+      const cw = 182, ch = 266, gapX = 24, gapY = 28;
+      const cols = Math.min(5, n);
+      const rows = Math.ceil(n / cols);
+      const totalW = cols * cw + (cols - 1) * gapX;
+      const totalH = rows * ch + (rows - 1) * gapY;
+      const startX = (innerWidth - totalW) / 2 + cw / 2;
+      const startY = (innerHeight - totalH) / 2 + ch / 2;
+      slots.forEach((slot, i) => {
+        const col = i % cols, row = Math.floor(i / cols);
+        slot.style.left = (startX + col * (cw + gapX)) + 'px';
+        slot.style.top = (startY + row * (ch + gapY)) + 'px';
+        slot.style.setProperty('--rot', '0deg');
+        slot.style.zIndex = i;
+      });
+    }
+
+    function build(deck) {
+      stage.innerHTML = '';
+      const slots = deck.map((c, i) => {
+        const slot = document.createElement('div');
+        slot.className = 'slot';
+        slot.style.animationDelay = (i * 70) + 'ms';
+        slot.innerHTML = `<div class="card">
+            <div class="face front">${cardFaceHTML(c)}</div>
+            <div class="face back"><img class="full" src="${enc(BACK)}" alt=""></div>
+          </div>`;
+        const card = slot.querySelector('.card');
+        slot.addEventListener('click', () => {
+          card.classList.toggle('flipped');
+          slot.style.zIndex = ++topZ;
+        });
+        stage.appendChild(slot);
+        return slot;
+      });
+      scatter(slots);
+      // start with one already flipped, sitting on top
+      const start = slots[Math.min(1, slots.length - 1)];
+      start.querySelector('.card').classList.add('flipped');
+      start.style.zIndex = ++topZ;
+      return slots;
+    }
+
+    let SLOTS = [];
+    document.getElementById('ordered').addEventListener('click', () => ordered(SLOTS));
+    document.getElementById('reshuffle').addEventListener('click', () => scatter(SLOTS));
+    document.getElementById('flipdown').addEventListener('click', () =>
+      SLOTS.forEach(s => s.querySelector('.card').classList.remove('flipped')));
+
+    loadDeck().then(deck => {
+      [BACK, ...deck.map(d => DIR + d.file)].forEach(p => { const i = new Image(); i.src = enc(p); });
+      SLOTS = build(deck);
+    });
+  </script>
+</body>
+</html>
