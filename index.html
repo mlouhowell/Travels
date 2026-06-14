@@ -142,6 +142,27 @@
   }
   .controls button:hover { background: rgba(241,223,193,.16); }
 
+  /* ---------- MODAL (enlarged card) ---------- */
+  .modal {
+    position: fixed; inset: 0; z-index: 1000;
+    display: grid; place-items: center;
+    background: rgba(10,20,14,.62);
+    backdrop-filter: blur(4px);
+    cursor: zoom-out;
+    opacity: 0; pointer-events: none;
+    transition: opacity .22s ease;
+  }
+  .modal.open { opacity: 1; pointer-events: auto; }
+  .modal-inner {
+    position: relative;
+    width: 182px; height: 266px;        /* card design size; scaled to fit via JS */
+    border-radius: 10px; overflow: hidden;
+    box-shadow: 0 30px 90px -20px rgba(0,0,0,.75);
+    transform: scale(.9);
+    transition: transform .24s cubic-bezier(.2,.9,.3,1);
+  }
+  .modal.open .modal-inner { transform: scale(var(--mscale, 2)); }
+
   @media (prefers-reduced-motion: reduce) { .slot, .card { transition: none; animation: none; } }
 </style>
 </head>
@@ -154,6 +175,8 @@
     <button id="reshuffle">reshuffle</button>
     <button id="flipdown">flip all up</button>
   </div>
+
+  <div class="modal" id="modal"><div class="modal-inner" id="modalInner"></div></div>
 
   <script>
     const DIR  = "photos/";
@@ -333,8 +356,12 @@
           </div>`;
         const card = slot.querySelector('.card');
         slot.addEventListener('click', () => {
-          card.classList.toggle('flipped');
-          slot.style.zIndex = ++topZ;
+          if (card.classList.contains('flipped')) {
+            openModal(c);                 // already face-up -> enlarge into a modal
+          } else {
+            card.classList.add('flipped'); // face-down -> flip up to reveal (no flip-back)
+            slot.style.zIndex = ++topZ;
+          }
         });
         // video cards play on hover, reset on leave
         const vid = slot.querySelector('video');
@@ -358,6 +385,24 @@
     document.getElementById('reshuffle').addEventListener('click', () => shuffle(SLOTS));
     document.getElementById('flipdown').addEventListener('click', () =>
       SLOTS.forEach(s => s.querySelector('.card').classList.add('flipped')));
+
+    // ---------- modal (enlarged card, keeps its color treatment) ----------
+    const modal = document.getElementById('modal');
+    const modalInner = document.getElementById('modalInner');
+    function openModal(c) {
+      modalInner.innerHTML = cardFaceHTML(c);        // same .ace markup -> same grade/grain/color
+      const scale = Math.min(innerHeight * 0.64 / 266, innerWidth * 0.78 / 182);
+      modal.style.setProperty('--mscale', scale.toFixed(3));
+      modal.classList.add('open');
+      const v = modalInner.querySelector('video');   // play video cards in the modal
+      if (v) v.play().catch(() => {});
+    }
+    function closeModal() {
+      modal.classList.remove('open');
+      setTimeout(() => { if (!modal.classList.contains('open')) modalInner.innerHTML = ''; }, 240);
+    }
+    modal.addEventListener('click', closeModal);
+    window.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
 
     loadDeck().then(deck => {
       [enc(BACK), ...deck.map(d => enc(DIR + d.file) + (d.v ? '?v=' + d.v : ''))].forEach(p => { const i = new Image(); i.src = p; });
