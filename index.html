@@ -7,7 +7,7 @@
 <link rel="icon" type="image/svg+xml" href="favicon.svg" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Lora:wght@500;600;700&display=swap" rel="stylesheet" />
 <style>
   :root {
     --felt: #cfe0c4;
@@ -21,22 +21,38 @@
   html, body { height: 100%; }
 
   body {
-    background: var(--felt) url("backdrop.webp") center / cover no-repeat fixed;
+    background: var(--felt);
     font-family: ui-monospace, "Space Mono", monospace;
     overflow: hidden;
     user-select: none;
   }
+  /* per-region backdrop layers that crossfade when you flip a card */
+  .bg {
+    position: fixed; inset: 0; z-index: 0;
+    background-position: center; background-size: cover; background-repeat: no-repeat;
+    opacity: 0; transition: opacity .6s ease;
+  }
+  .bg.show { opacity: 1; }
   /* darken the backdrop (cards sit above this and stay bright) */
   body::before {
     content: "";
-    position: fixed; inset: 0; pointer-events: none;
+    position: fixed; inset: 0; pointer-events: none; z-index: 1;
     background:
       linear-gradient(rgba(14,34,24,.32), rgba(14,34,24,.32)),
       radial-gradient(120% 120% at 50% 42%, rgba(0,0,0,0) 55%, rgba(0,0,0,.45));
   }
 
   /* ---------- SCATTER STAGE ---------- */
-  .stage { position: fixed; inset: 0; }
+  .stage { position: fixed; inset: 0; z-index: 2; }
+  .stage.grid { overflow-y: auto; overflow-x: hidden; }
+  .grid-spacer { width: 100%; height: 0; pointer-events: none; }
+  .section-title {
+    position: absolute; left: 0; right: 0; text-align: center;
+    font-family: "EB Garamond", Garamond, serif;
+    font-style: italic; font-weight: 600; font-size: 30px; letter-spacing: .3px;
+    color: #fff;
+    pointer-events: none;
+  }
 
   .slot {
     position: absolute;
@@ -46,7 +62,7 @@
     cursor: pointer;
     transition: left .6s cubic-bezier(.2,.8,.2,1), top .6s cubic-bezier(.2,.8,.2,1),
                 transform .6s cubic-bezier(.2,.8,.2,1);
-    transform: rotate(var(--rot, 0deg));
+    transform: rotate(var(--rot, 0deg)) scale(var(--sc, 1));
     animation: fade .5s ease both;
   }
 
@@ -87,8 +103,9 @@
   .pip {
     position: absolute;
     display: flex; flex-direction: column; align-items: center;
-    line-height: .82; color: var(--ink);
+    line-height: .82; color: #0A0A0A;            /* Ireland: black rank + club */
   }
+  .ace.japan .pip { color: #D23934; }            /* Japan: red rank + heart symbol */
   .pip.tl { top: 8px; left: 9px; }
   .pip.br { bottom: 8px; right: 9px; transform: rotate(180deg); }
 
@@ -124,12 +141,13 @@
     text-align: center;
     font-family: "EB Garamond", Garamond, serif;
     font-style: italic; font-weight: 400;
-    font-size: 11px; color: #123617;
+    font-size: 11px; color: #0A0A0A;             /* caption black on every card */
   }
 
   /* ---------- CONTROLS ---------- */
   .controls {
     position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+    z-index: 5;
     display: flex; align-items: center; gap: 12px;
     background: rgba(20,40,28,.5); border: 1px solid rgba(241,223,193,.3);
     padding: 9px 14px; border-radius: 999px;
@@ -168,6 +186,9 @@
 </head>
 <body>
 
+  <div class="bg show" id="bg-ireland" style="background-image:url('backdrop.webp')"></div>
+  <div class="bg" id="bg-japan" style="background-image:url('backdrop-japan.webp')"></div>
+
   <div class="stage" id="stage"></div>
 
   <div class="controls">
@@ -180,7 +201,13 @@
 
   <script>
     const DIR  = "photos/";
-    const BACK = "backdrop.webp";
+    // per-region backdrop (used for both the page background and the card back)
+    const BACKDROPS = { ireland: "backdrop.webp", japan: "backdrop-japan.webp" };
+    const regionOf = caption => /,\s*japan\s*$/i.test(caption) ? 'japan' : 'ireland';
+    function setBackdrop(region) {
+      document.getElementById('bg-ireland').classList.toggle('show', region === 'ireland');
+      document.getElementById('bg-japan').classList.toggle('show', region === 'japan');
+    }
     const RANKS = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
     const FALLBACK = [
       "1 Achill Island, Ireland.jpg","2 Cliffs of Moher, Ireland.jpg","3 Westport, Ireland.jpg",
@@ -198,6 +225,8 @@
       <path d="M3.77002 14.4719C-0.0448664 16.9434 -1.38391 11.2026 1.72705 10.0354C-1.38389 8.86818 -0.0448457 3.12747 3.77002 5.59889L10.3022 10.0354L3.77002 14.4719Z" fill="currentColor"/>
       <path d="M8.90283 10.3042L8.77794 12.1265C8.60703 14.6203 9.40775 17.0835 11.0124 19.0002" stroke="currentColor" stroke-width="1.05097" stroke-linecap="round" fill="none"/>
     </svg>`;
+
+    const DIAMOND = `<svg class="club" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><path d="M26.9546 10.7677C32.9796 10.477 38.2371 12.8104 42.5799 16.8359C44.4792 18.5965 46.172 20.5494 47.5525 22.7368C48.1035 23.6206 48.6083 24.5323 49.065 25.4683C49.222 25.7964 49.8337 27.4045 50.0646 27.4369C50.1884 27.3427 50.8094 25.8775 50.9296 25.6255C51.2819 24.8931 51.6668 24.1769 52.0836 23.4792C53.3812 21.2769 55.2902 18.822 57.0917 16.9936C60.7423 13.2885 66.6913 10.6827 71.9076 10.7504C77.8234 10.7997 83.4705 13.2275 87.5761 17.4867C91.6681 21.6661 93.9883 28.6646 93.9132 34.4528C93.8759 37.2894 93.3397 40.6557 92.2905 43.3102C91.7901 44.5757 90.5766 46.7537 89.8781 47.9073C88.5785 50.0742 87.1357 52.1516 85.5578 54.1254C83.666 56.4775 81.4558 58.8077 79.4077 61.0382C76.5751 64.1576 73.6613 67.2019 70.6694 70.1692C68.5816 72.4435 51.5762 88.7239 49.9796 89.2566C49.4207 89.0832 46.8434 86.6013 46.2556 86.0757C42.569 82.7819 38.9459 79.4176 35.3883 75.9847C27.9709 68.8725 20.5476 61.649 14.2004 53.5544C12.5349 51.3823 10.7791 49.3002 9.42193 46.9149C2.40459 34.5817 6.65046 17.6479 20.3319 12.1714C22.5862 11.269 24.5619 10.9657 26.9546 10.7677Z" fill="currentColor"/></svg>`;
 
     async function loadDeck() {
       let files;
@@ -225,11 +254,15 @@
         return { order: m ? +m[1] : 9999, caption: m ? m[2] : name, file: f, v };
       }).sort((a, b) => a.order - b.order || a.caption.localeCompare(b.caption));
       // rank comes from the filename's leading number (1->A, 10->10); fall back to position
-      items.forEach((it, i) => it.rank = it.order < 9999 ? rankFor(it.order - 1) : rankFor(i));
+      items.forEach((it, i) => {
+        it.rank = it.order < 9999 ? rankFor(it.order - 1) : rankFor(i);
+        it.region = regionOf(it.caption);
+        it.caption = it.caption.replace(/,\s*(ireland|japan)\s*$/i, '').trim();  // show just the place
+      });
       return items;
     }
 
-    const pip = rank => `<span class="rank">${rank}</span>${CLUB}`;
+    const pip = (rank, region) => `<span class="rank">${rank}</span>${region === 'japan' ? DIAMOND : CLUB}`;
     const isVideo = f => /\.(mp4|webm|mov)$/i.test(f);
     const mediaHTML = c => {
       const src = enc(DIR + c.file) + (c.v ? '?v=' + c.v : '');
@@ -237,9 +270,9 @@
         ? `<video class="media" muted loop playsinline preload="metadata" src="${src}#t=0.1"></video>`
         : `<img class="media" src="${src}" alt="${c.caption}">`;
     };
-    const cardFaceHTML = c => `<div class="ace">
-        <div class="pip tl">${pip(c.rank)}</div>
-        <div class="pip br">${pip(c.rank)}</div>
+    const cardFaceHTML = c => `<div class="ace${c.region === 'japan' ? ' japan' : ''}">
+        <div class="pip tl">${pip(c.rank, c.region)}</div>
+        <div class="pip br">${pip(c.rank, c.region)}</div>
         <div class="photo">${mediaHTML(c)}</div>
         <div class="caption">${c.caption}</div>
       </div>`;
@@ -248,38 +281,90 @@
     let topZ = 100;
     let busy = false;
 
-    function scatter(slots) {
+    const CW = 182, CH = 266;
+    // a jittered, overlapping "messy pile" that fits any number of cards on screen
+    function pilePos(n) {
       const W = innerWidth, H = innerHeight;
-      const n = slots.length;
-      const perRow = Math.ceil(n / 2);
+      const rows = Math.max(1, Math.round(Math.sqrt(n / 2.2)));
+      const perRow = Math.ceil(n / rows);
+      const stepX = Math.min(CW * 0.92, (W * 0.9) / Math.max(1, perRow));
+      const stepY = Math.min(CH * 0.72, (H * 0.78) / Math.max(1, rows));
+      const x0 = W / 2 - stepX * (perRow - 1) / 2, y0 = H / 2 - stepY * (rows - 1) / 2;
+      return i => {
+        const r = Math.floor(i / perRow), c = i % perRow;
+        return {
+          x: x0 + c * stepX + rand(-stepX * 0.16, stepX * 0.16),
+          y: y0 + r * stepY + rand(-stepY * 0.16, stepY * 0.16),
+          rot: rand(-18, 18),
+        };
+      };
+    }
+    function scatter(slots) {
+      exitScroll();
+      const pos = pilePos(slots.length);
       slots.forEach((slot, i) => {
-        const row = i < perRow ? 0 : 1;
-        const col = i % perRow;
-        const x = 50 + (col - (perRow - 1) / 2) * 12 + rand(-3.5, 3.5);
-        const y = (row === 0 ? 43 : 60) + rand(-4, 4);
-        slot.style.left = (x / 100 * W) + 'px';
-        slot.style.top = (y / 100 * H) + 'px';
-        slot.style.setProperty('--rot', rand(-22, 22).toFixed(1) + 'deg');
+        const p = pos(i);
+        slot.style.left = p.x + 'px'; slot.style.top = p.y + 'px';
+        slot.style.setProperty('--rot', p.rot.toFixed(1) + 'deg');
+        slot.style.setProperty('--sc', '1');
         slot.style.zIndex = i;
       });
     }
 
+    // leave the scrolling grid view, back to the fixed pile viewport
+    let gridScrollHandler = null;
+    function exitScroll() {
+      if (!stage.classList.contains('grid')) return;
+      if (gridScrollHandler) { stage.removeEventListener('scroll', gridScrollHandler); gridScrollHandler = null; }
+      stage.scrollTop = 0;
+      stage.classList.remove('grid');
+      const sp = document.getElementById('gridSpacer'); if (sp) sp.style.height = '0px';
+      document.querySelectorAll('.section-title').forEach(t => t.style.display = 'none');
+    }
+
+    function sectionTitle(id, text, y) {
+      let t = document.getElementById(id);
+      if (!t) { t = document.createElement('div'); t.id = id; t.className = 'section-title'; stage.appendChild(t); }
+      t.textContent = text; t.style.top = y + 'px'; t.style.display = '';
+    }
+
+    // full-size cards in rank order: Ireland section, then Japan section below;
+    // the page scrolls and the backdrop changes when you reach the Japan section
     function ordered(slots) {
-      const n = slots.length;
-      const cw = 182, ch = 266, gapX = 24, gapY = 28;
-      const cols = Math.min(5, n);
-      const rows = Math.ceil(n / cols);
-      const totalW = cols * cw + (cols - 1) * gapX;
-      const totalH = rows * ch + (rows - 1) * gapY;
-      const startX = (innerWidth - totalW) / 2 + cw / 2;
-      const startY = (innerHeight - totalH) / 2 + ch / 2;
-      slots.forEach((slot, i) => {
-        const col = i % cols, row = Math.floor(i / cols);
-        slot.style.left = (startX + col * (cw + gapX)) + 'px';
-        slot.style.top = (startY + row * (ch + gapY)) + 'px';
-        slot.style.setProperty('--rot', '0deg');
-        slot.style.zIndex = i;
-      });
+      stage.classList.add('grid');
+      let sp = document.getElementById('gridSpacer');
+      if (!sp) { sp = document.createElement('div'); sp.id = 'gridSpacer'; sp.className = 'grid-spacer'; stage.appendChild(sp); }
+      const cols = 5, gapX = 20, gapY = 26, sectionGap = 76, topPad = 40, headerH = 60;
+      const vw = stage.clientWidth;
+      const gridW = cols * CW + (cols - 1) * gapX;
+      const x0 = Math.max(16, (vw - gridW) / 2);
+      const byOrder = (a, b) => a.dataset.order - b.dataset.order;
+      const ire = slots.filter(s => s.dataset.region !== 'japan').sort(byOrder);
+      const jpn = slots.filter(s => s.dataset.region === 'japan').sort(byOrder);
+      const lay = (group, startY) => {
+        group.forEach((s, i) => {
+          const r = Math.floor(i / cols), c = i % cols;
+          s.style.left = (x0 + c * (CW + gapX) + CW / 2) + 'px';
+          s.style.top = (startY + r * (CH + gapY) + CH / 2) + 'px';
+          s.style.setProperty('--rot', '0deg');
+          s.style.setProperty('--sc', '1');
+          s.style.zIndex = i + 1;
+        });
+        const rows = Math.ceil(group.length / cols);
+        return startY + rows * CH + Math.max(0, rows - 1) * gapY;
+      };
+      let y = topPad;
+      sectionTitle('titleIreland', 'Ireland 2022–2026', y);
+      y = lay(ire, y + headerH);
+      y += sectionGap;
+      const japanHeaderY = y;
+      sectionTitle('titleJapan', 'Japan 2025', y);
+      y = lay(jpn, y + headerH);
+      sp.style.height = (y + topPad) + 'px';
+      stage.scrollTop = 0;
+      setBackdrop('ireland');
+      gridScrollHandler = () => setBackdrop((stage.scrollTop + innerHeight * 0.42) >= japanHeaderY ? 'japan' : 'ireland');
+      stage.addEventListener('scroll', gridScrollHandler, { passive: true });
     }
 
     const delay = ms => new Promise(r => setTimeout(r, ms));
@@ -288,6 +373,7 @@
     async function shuffle(slots) {
       if (busy) return;
       busy = true;
+      exitScroll();
       stage.style.pointerEvents = 'none';
       const W = innerWidth, H = innerHeight, cx = W / 2, cy = H / 2;
 
@@ -298,6 +384,7 @@
         s.style.left = cx + 'px';
         s.style.top = cy + 'px';
         s.style.setProperty('--rot', rand(-2, 2).toFixed(1) + 'deg');
+        s.style.setProperty('--sc', '1');
         s.style.zIndex = i;
       });
       await delay(340);
@@ -323,21 +410,19 @@
       }
 
       // 3) deal back out into a fresh scatter, one after another
-      const n = slots.length, perRow = Math.ceil(n / 2);
+      const n = slots.length;
+      const pos = pilePos(n);
       const order = slots.map((_, i) => i).sort(() => rand(-1, 1)); // deal in random order
       order.forEach((idx, k) => {
-        const s = slots[idx];
-        const row = idx < perRow ? 0 : 1, col = idx % perRow;
-        const x = 50 + (col - (perRow - 1) / 2) * 12 + rand(-3.5, 3.5);
-        const y = (row === 0 ? 43 : 60) + rand(-4, 4);
-        const d = k * 45;
+        const s = slots[idx], p = pos(idx);
+        const d = k * 38;
         s.style.transition = `left .42s cubic-bezier(.2,.8,.2,1) ${d}ms, top .42s cubic-bezier(.2,.8,.2,1) ${d}ms, transform .42s cubic-bezier(.2,.8,.2,1) ${d}ms`;
-        s.style.left = (x / 100 * W) + 'px';
-        s.style.top = (y / 100 * H) + 'px';
-        s.style.setProperty('--rot', rand(-22, 22).toFixed(1) + 'deg');
+        s.style.left = p.x + 'px'; s.style.top = p.y + 'px';
+        s.style.setProperty('--rot', p.rot.toFixed(1) + 'deg');
+        s.style.setProperty('--sc', '1');
         s.style.zIndex = k;
       });
-      await delay(420 + n * 45 + 60);
+      await delay(420 + n * 38 + 60);
 
       slots.forEach(s => s.style.transition = '');   // back to the default CSS transition
       stage.style.pointerEvents = '';
@@ -349,10 +434,12 @@
       const slots = deck.map((c, i) => {
         const slot = document.createElement('div');
         slot.className = 'slot';
+        slot.dataset.region = c.region;
+        slot.dataset.order = c.order;
         slot.style.animationDelay = (i * 70) + 'ms';
         slot.innerHTML = `<div class="card">
             <div class="face front">${cardFaceHTML(c)}</div>
-            <div class="face back"><img class="full" src="${enc(BACK)}" alt=""></div>
+            <div class="face back"><img class="full" src="${enc(BACKDROPS[c.region])}" alt=""></div>
           </div>`;
         const card = slot.querySelector('.card');
         slot.addEventListener('click', () => {
@@ -361,6 +448,7 @@
           } else {
             card.classList.add('flipped'); // face-down -> flip up to reveal (no flip-back)
             slot.style.zIndex = ++topZ;
+            if (!stage.classList.contains('grid')) setBackdrop(c.region); // in the pile, the flipped card sets the backdrop (in the grid, scroll does)
           }
         });
         // video cards play on hover, reset on leave
@@ -374,9 +462,11 @@
       });
       scatter(slots);
       // start with one already flipped, sitting on top
-      const start = slots[Math.min(1, slots.length - 1)];
+      const startIdx = Math.min(1, slots.length - 1);
+      const start = slots[startIdx];
       start.querySelector('.card').classList.add('flipped');
       start.style.zIndex = ++topZ;
+      setBackdrop(deck[startIdx].region);   // match the page background to the face-up card
       return slots;
     }
 
@@ -405,7 +495,7 @@
     window.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
 
     loadDeck().then(deck => {
-      [enc(BACK), ...deck.map(d => enc(DIR + d.file) + (d.v ? '?v=' + d.v : ''))].forEach(p => { const i = new Image(); i.src = p; });
+      [enc(BACKDROPS.ireland), enc(BACKDROPS.japan), ...deck.map(d => enc(DIR + d.file) + (d.v ? '?v=' + d.v : ''))].forEach(p => { const i = new Image(); i.src = p; });
       SLOTS = build(deck);
     });
   </script>
