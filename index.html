@@ -49,7 +49,6 @@
     transform: rotate(var(--rot, 0deg));
     animation: fade .5s ease both;
   }
-  .slot:hover { z-index: 999 !important; }
 
   .card {
     position: absolute; inset: 0;
@@ -102,7 +101,7 @@
     border-radius: 5px; overflow: hidden;
     background: #e8e8e8;
   }
-  .photo img {
+  .photo img, .photo video {
     width: 100%; height: 100%; object-fit: cover; display: block;
     /* gently aged: a little muted + warm, not punchy */
     filter: contrast(1.05) saturate(1.02) brightness(1.02) sepia(.12);
@@ -153,7 +152,7 @@
   <div class="controls">
     <button id="ordered">Ordered</button>
     <button id="reshuffle">reshuffle</button>
-    <button id="flipdown">flip all down</button>
+    <button id="flipdown">flip all up</button>
   </div>
 
   <script>
@@ -190,15 +189,17 @@
           const res = await fetch(enc(DIR));
           const doc = new DOMParser().parseFromString(await res.text(), 'text/html');
           files = [...doc.querySelectorAll('a')].map(a => a.getAttribute('href'))
-            .filter(h => h && /\.(jpe?g|png|webp|avif)$/i.test(h) && !h.endsWith('/'))
+            .filter(h => h && /\.(jpe?g|png|webp|avif|mp4|webm|mov)$/i.test(h) && !h.endsWith('/'))
             .map(h => decodeURIComponent(h.split('/').pop()));
           if (!files.length) throw new Error('empty');
         } catch (e2) { files = FALLBACK.slice(); }
       }
-      const items = files.map(f => {
+      const items = files.map(o => {
+        const f = o.f || o;                 // manifest gives {f, v}; dir listing gives a string
+        const v = o.v || '';
         const name = f.replace(/\.[^.]+$/, '');
         const m = name.match(/^\s*(\d+)\s+(.*)$/);
-        return { order: m ? +m[1] : 9999, caption: m ? m[2] : name, file: f };
+        return { order: m ? +m[1] : 9999, caption: m ? m[2] : name, file: f, v };
       }).sort((a, b) => a.order - b.order || a.caption.localeCompare(b.caption));
       // rank comes from the filename's leading number (1->A, 10->10); fall back to position
       items.forEach((it, i) => it.rank = it.order < 9999 ? rankFor(it.order - 1) : rankFor(i));
@@ -206,10 +207,17 @@
     }
 
     const pip = rank => `<span class="rank">${rank}</span>${CLUB}`;
+    const isVideo = f => /\.(mp4|webm|mov)$/i.test(f);
+    const mediaHTML = c => {
+      const src = enc(DIR + c.file) + (c.v ? '?v=' + c.v : '');
+      return isVideo(c.file)
+        ? `<video class="media" muted loop playsinline preload="metadata" src="${src}#t=0.1"></video>`
+        : `<img class="media" src="${src}" alt="${c.caption}">`;
+    };
     const cardFaceHTML = c => `<div class="ace">
         <div class="pip tl">${pip(c.rank)}</div>
         <div class="pip br">${pip(c.rank)}</div>
-        <div class="photo"><img src="${enc(DIR + c.file)}" alt="${c.caption}"></div>
+        <div class="photo">${mediaHTML(c)}</div>
         <div class="caption">${c.caption}</div>
       </div>`;
 
@@ -328,6 +336,12 @@
           card.classList.toggle('flipped');
           slot.style.zIndex = ++topZ;
         });
+        // video cards play on hover, reset on leave
+        const vid = slot.querySelector('video');
+        if (vid) {
+          slot.addEventListener('mouseenter', () => { vid.play().catch(() => {}); });
+          slot.addEventListener('mouseleave', () => { vid.pause(); vid.currentTime = 0.1; });
+        }
         stage.appendChild(slot);
         return slot;
       });
@@ -343,10 +357,10 @@
     document.getElementById('ordered').addEventListener('click', () => ordered(SLOTS));
     document.getElementById('reshuffle').addEventListener('click', () => shuffle(SLOTS));
     document.getElementById('flipdown').addEventListener('click', () =>
-      SLOTS.forEach(s => s.querySelector('.card').classList.remove('flipped')));
+      SLOTS.forEach(s => s.querySelector('.card').classList.add('flipped')));
 
     loadDeck().then(deck => {
-      [BACK, ...deck.map(d => DIR + d.file)].forEach(p => { const i = new Image(); i.src = enc(p); });
+      [enc(BACK), ...deck.map(d => enc(DIR + d.file) + (d.v ? '?v=' + d.v : ''))].forEach(p => { const i = new Image(); i.src = p; });
       SLOTS = build(deck);
     });
   </script>
