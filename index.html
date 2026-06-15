@@ -7,7 +7,7 @@
 <link rel="icon" type="image/svg+xml" href="favicon.svg" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Space+Mono&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Old+Standard+TT:ital,wght@0,400;0,700;1,400&family=Space+Mono&display=swap" rel="stylesheet" />
 <style>
   :root {
     --felt: #cfe0c4;
@@ -48,8 +48,8 @@
   .grid-spacer { width: 100%; height: 0; pointer-events: none; }
   .section-title {
     position: absolute; left: 0; right: 0; text-align: center;
-    font-family: "EB Garamond", Garamond, serif;
-    font-style: italic; font-weight: 600; font-size: 30px; letter-spacing: .3px;
+    font-family: "Old Standard TT", Georgia, serif;
+    font-style: normal; font-weight: 400; font-size: 38px; letter-spacing: -.8px;
     color: #fff;
     pointer-events: none;
   }
@@ -187,6 +187,29 @@
   }
   .modal.open .modal-inner { transform: scale(var(--mscale, 2)); }
 
+  /* left-side index: white tick lines that expand to reveal each image's name on hover */
+  .modal-nav {
+    position: absolute; left: 28px; top: 50%; transform: translateY(-50%);
+    display: flex; flex-direction: column; gap: 9px;
+    max-height: 88vh; z-index: 2;
+  }
+  .modal-nav .nav-item { display: flex; align-items: center; gap: 16px; height: 13px; cursor: pointer; }
+  .modal-nav .nav-line {
+    flex: none; height: 2px; width: 26px; background: rgba(255,255,255,.5);
+    transition: width .25s cubic-bezier(.2,.8,.2,1), background .2s ease;
+  }
+  .modal-nav .nav-item.active .nav-line { width: 40px; background: #fff; }
+  .modal-nav .nav-label {
+    font-family: "EB Garamond", Garamond, serif; font-size: 18px; color: #fff;
+    white-space: nowrap; opacity: 0; transform: translateX(-6px);
+    transition: opacity .22s ease, transform .22s ease;
+  }
+  .modal-nav:hover .nav-line { width: 40px; }
+  .modal-nav:hover .nav-item.active .nav-line { width: 52px; }
+  /* only the line you're hovering reveals its name */
+  .modal-nav .nav-item:hover .nav-line { width: 56px; background: #fff; }
+  .modal-nav .nav-item:hover .nav-label { opacity: 1; transform: translateX(0); }
+
   /* ---------- standard ML Howell footer ---------- */
   #footer {
     position: fixed;
@@ -214,7 +237,7 @@
     <button id="flipdown">flip all up</button>
   </div>
 
-  <div class="modal" id="modal"><div class="modal-inner" id="modalInner"></div></div>
+  <div class="modal" id="modal"><div class="modal-nav" id="modalNav"></div><div class="modal-inner" id="modalInner"></div></div>
 
   <div id="footer"><a href="https://mary-louise.com" target="_blank" rel="noopener">By ML Howell</a> · V1.1 · June 2026</div>
 
@@ -496,7 +519,7 @@
       return slots;
     }
 
-    let SLOTS = [];
+    let SLOTS = [], DECK = [];
     document.getElementById('ordered').addEventListener('click', () => ordered(SLOTS));
     document.getElementById('reshuffle').addEventListener('click', () => shuffle(SLOTS));
     document.getElementById('flipdown').addEventListener('click', () =>
@@ -505,11 +528,32 @@
     // ---------- modal (enlarged card, keeps its color treatment) ----------
     const modal = document.getElementById('modal');
     const modalInner = document.getElementById('modalInner');
+    const modalNav = document.getElementById('modalNav');
+
+    // left-side index of the images in the current card's section
+    function buildModalNav(current) {
+      const items = DECK.filter(d => d.region === current.region).sort((a, b) => a.order - b.order);
+      modalNav.innerHTML = '';
+      items.forEach(card => {
+        const el = document.createElement('div');
+        el.className = 'nav-item' + (card === current ? ' active' : '');
+        el.innerHTML = `<span class="nav-line"></span><span class="nav-label">${card.caption}</span>`;
+        el._card = card;
+        modalNav.appendChild(el);
+      });
+    }
+    modalNav.addEventListener('click', e => {
+      e.stopPropagation();                              // don't close the modal
+      const item = e.target.closest('.nav-item');
+      if (item && item._card) openModal(item._card);
+    });
+
     function openModal(c) {
       modalInner.innerHTML = cardFaceHTML(c);        // same .ace markup -> same grade/grain/color
       const scale = Math.min(innerHeight * 0.64 / 266, innerWidth * 0.78 / 182);
       modal.style.setProperty('--mscale', scale.toFixed(3));
       modal.classList.add('open');
+      buildModalNav(c);                              // section index on the left
       const v = modalInner.querySelector('video');   // play video cards in the modal
       if (v) v.play().catch(() => {});
     }
@@ -521,6 +565,7 @@
     window.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
 
     loadDeck().then(deck => {
+      DECK = deck;
       [enc(BACKDROPS.ireland), enc(BACKDROPS.japan), ...deck.map(d => enc(DIR + d.file) + (d.v ? '?v=' + d.v : ''))].forEach(p => { const i = new Image(); i.src = p; });
       SLOTS = build(deck);
     });
