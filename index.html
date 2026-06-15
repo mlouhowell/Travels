@@ -239,8 +239,8 @@
 
   <div class="controls">
     <button id="ordered">Ordered</button>
-    <button id="reshuffle">reshuffle</button>
-    <button id="flipdown">flip all up</button>
+    <button id="reshuffle">Reshuffle</button>
+    <button id="flipdown">Flip all up</button>
   </div>
 
   <div class="modal" id="modal"><div class="modal-nav" id="modalNav"></div><div class="modal-inner" id="modalInner"></div></div>
@@ -356,7 +356,7 @@
       const gapX = vw < 680 ? 12 : 20, gapY = vw < 680 ? 16 : 26;
       const sc = Math.min(1, (vw - 2 * sidePad - (cols - 1) * gapX) / (cols * CW));  // scale cards to fit
       const cw = CW * sc, ch = CH * sc;
-      const sectionGap = vw < 680 ? 120 : 210, topPad = vw < 680 ? 96 : 130, headerH = vw < 680 ? 108 : 138;
+      const sectionGap = vw < 680 ? 120 : 210, topPad = vw < 680 ? 52 : 64, headerH = vw < 680 ? 108 : 138;
       const byOrder = (a, b) => a.dataset.order - b.dataset.order;
       const ire = slots.filter(s => s.dataset.region !== 'japan').sort(byOrder);
       const jpn = slots.filter(s => s.dataset.region === 'japan').sort(byOrder);
