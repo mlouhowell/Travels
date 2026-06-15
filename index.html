@@ -7,7 +7,7 @@
 <link rel="icon" type="image/svg+xml" href="favicon.svg" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Lora:wght@500;600;700&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Space+Mono&display=swap" rel="stylesheet" />
 <style>
   :root {
     --felt: #cfe0c4;
@@ -81,14 +81,17 @@
     /* soft, even "scanned on paper" shadow */
     box-shadow: 0 2px 5px rgba(0,0,0,.14), 0 8px 20px -6px rgba(0,0,0,.22);
     background: #fff;
+    transition: box-shadow .4s ease;
   }
+  /* while the deck is stacked/riffling, drop the shadow so overlaps don't compound into a dark blob */
+  .stage.shuffling .face { box-shadow: 0 2px 5px rgba(0,0,0,0), 0 8px 20px -6px rgba(0,0,0,0); }
   .face.front { transform: rotateY(180deg); }
-  /* all card backs share the current region's backdrop, swapped together via the body class */
+  /* each card's back matches its own region/section (green for Ireland, purple for Japan) */
   .face.back  {
     transform: rotateY(0deg);
     background: #fff url("backdrop.webp") center / cover no-repeat;
   }
-  body.region-japan .face.back { background-image: url("backdrop-japan.webp"); }
+  .slot[data-region="japan"] .face.back { background-image: url("backdrop-japan.webp"); }
 
   @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
 
@@ -184,6 +187,17 @@
   }
   .modal.open .modal-inner { transform: scale(var(--mscale, 2)); }
 
+  /* ---------- standard ML Howell footer ---------- */
+  #footer {
+    position: fixed;
+    bottom: 16px;
+    left: 20px;
+    z-index: 300;
+    font: 10px/1 'Space Mono', ui-monospace, monospace;
+    color: #fff;
+  }
+  #footer a { color: inherit; text-decoration: none; }
+
   @media (prefers-reduced-motion: reduce) { .slot, .card { transition: none; animation: none; } }
 </style>
 </head>
@@ -202,15 +216,19 @@
 
   <div class="modal" id="modal"><div class="modal-inner" id="modalInner"></div></div>
 
+  <div id="footer"><a href="https://mary-louise.com" target="_blank" rel="noopener">By ML Howell</a> · V1.1 · June 2026</div>
+
   <script>
     const DIR  = "photos/";
     // per-region backdrop (used for both the page background and the card back)
     const BACKDROPS = { ireland: "backdrop.webp", japan: "backdrop-japan.webp" };
     const regionOf = caption => /,\s*japan\s*$/i.test(caption) ? 'japan' : 'ireland';
+    const bgIreland = document.getElementById('bg-ireland');  // always-on base layer
+    const bgJapan = document.getElementById('bg-japan');       // on top: opacity crossfade (pile) / masked reveal (grid)
     // one shared "current region": swaps the page background AND every card back together
     function setRegion(region) {
-      document.getElementById('bg-ireland').classList.toggle('show', region === 'ireland');
-      document.getElementById('bg-japan').classList.toggle('show', region === 'japan');
+      bgJapan.style.maskImage = bgJapan.style.webkitMaskImage = '';  // drop any spatial mask
+      bgJapan.classList.toggle('show', region === 'japan');
       document.body.classList.toggle('region-japan', region === 'japan');
     }
     const RANKS = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
@@ -287,45 +305,7 @@
     let busy = false;
 
     const CW = 182, CH = 266;
-    // a jittered, overlapping "messy pile" that fits any number of cards on screen
-    function pilePos(n) {
-      const W = innerWidth, H = innerHeight;
-      const rows = Math.max(1, Math.round(Math.sqrt(n / 2.2)));
-      const perRow = Math.ceil(n / rows);
-      const stepX = Math.min(CW * 0.92, (W * 0.9) / Math.max(1, perRow));
-      const stepY = Math.min(CH * 0.72, (H * 0.78) / Math.max(1, rows));
-      const x0 = W / 2 - stepX * (perRow - 1) / 2, y0 = H / 2 - stepY * (rows - 1) / 2;
-      return i => {
-        const r = Math.floor(i / perRow), c = i % perRow;
-        return {
-          x: x0 + c * stepX + rand(-stepX * 0.16, stepX * 0.16),
-          y: y0 + r * stepY + rand(-stepY * 0.16, stepY * 0.16),
-          rot: rand(-18, 18),
-        };
-      };
-    }
-    function scatter(slots) {
-      exitScroll();
-      const pos = pilePos(slots.length);
-      slots.forEach((slot, i) => {
-        const p = pos(i);
-        slot.style.left = p.x + 'px'; slot.style.top = p.y + 'px';
-        slot.style.setProperty('--rot', p.rot.toFixed(1) + 'deg');
-        slot.style.setProperty('--sc', '1');
-        slot.style.zIndex = i;
-      });
-    }
-
-    // leave the scrolling grid view, back to the fixed pile viewport
     let gridScrollHandler = null;
-    function exitScroll() {
-      if (!stage.classList.contains('grid')) return;
-      if (gridScrollHandler) { stage.removeEventListener('scroll', gridScrollHandler); gridScrollHandler = null; }
-      stage.scrollTop = 0;
-      stage.classList.remove('grid');
-      const sp = document.getElementById('gridSpacer'); if (sp) sp.style.height = '0px';
-      document.querySelectorAll('.section-title').forEach(t => t.style.display = 'none');
-    }
 
     function sectionTitle(id, text, y) {
       let t = document.getElementById(id);
@@ -333,56 +313,94 @@
       t.textContent = text; t.style.top = y + 'px'; t.style.display = '';
     }
 
-    // full-size cards in rank order: Ireland section, then Japan section below;
-    // the page scrolls and the backdrop changes when you reach the Japan section
-    function ordered(slots) {
+    // Lay both trips out as scrollable sections (Ireland, then Japan) with titles + a hard
+    // background separation. placement 'grid' = tidy rank-ordered grid; 'scatter' = messy pile.
+    // Returns a Map of slot -> {x, y, rot} target positions (used by the shuffle deal-out).
+    function sectionView(slots, placement) {
       stage.classList.add('grid');
       let sp = document.getElementById('gridSpacer');
       if (!sp) { sp = document.createElement('div'); sp.id = 'gridSpacer'; sp.className = 'grid-spacer'; stage.appendChild(sp); }
-      const cols = 5, gapX = 20, gapY = 26, sectionGap = 76, topPad = 40, headerH = 60;
+      const cols = 5, gapX = 20, gapY = 26, sectionGap = 210, topPad = 130, headerH = 118;
       const vw = stage.clientWidth;
-      const gridW = cols * CW + (cols - 1) * gapX;
-      const x0 = Math.max(16, (vw - gridW) / 2);
       const byOrder = (a, b) => a.dataset.order - b.dataset.order;
       const ire = slots.filter(s => s.dataset.region !== 'japan').sort(byOrder);
       const jpn = slots.filter(s => s.dataset.region === 'japan').sort(byOrder);
-      const lay = (group, startY) => {
-        group.forEach((s, i) => {
-          const r = Math.floor(i / cols), c = i % cols;
-          s.style.left = (x0 + c * (CW + gapX) + CW / 2) + 'px';
-          s.style.top = (startY + r * (CH + gapY) + CH / 2) + 'px';
-          s.style.setProperty('--rot', '0deg');
-          s.style.setProperty('--sc', '1');
-          s.style.zIndex = i + 1;
-        });
-        const rows = Math.ceil(group.length / cols);
-        return startY + rows * CH + Math.max(0, rows - 1) * gapY;
-      };
+      const targets = new Map();
+
+      function place(group, startY) {
+        if (placement === 'grid') {
+          const gridW = cols * CW + (cols - 1) * gapX;
+          const x0 = Math.max(16, (vw - gridW) / 2);
+          group.forEach((s, i) => {
+            const r = Math.floor(i / cols), c = i % cols;
+            targets.set(s, { x: x0 + c * (CW + gapX) + CW / 2, y: startY + r * (CH + gapY) + CH / 2, rot: 0 });
+          });
+          const rows = Math.ceil(group.length / cols);
+          return startY + rows * CH + Math.max(0, rows - 1) * gapY;
+        } else {  // scattered within the section band
+          const stepX = Math.min(CW * 0.86, (vw * 0.72) / cols), stepY = CH * 1.02;
+          const x0 = vw / 2 - stepX * (cols - 1) / 2;
+          group.forEach((s, i) => {
+            const r = Math.floor(i / cols), c = i % cols;
+            targets.set(s, {
+              x: x0 + c * stepX + rand(-stepX * 0.2, stepX * 0.2),
+              y: startY + CH / 2 + r * stepY + rand(-stepY * 0.22, stepY * 0.22),
+              rot: rand(-17, 17),
+            });
+          });
+          const rows = Math.ceil(group.length / cols);
+          return startY + (rows - 1) * stepY + CH;
+        }
+      }
+
       let y = topPad;
       sectionTitle('titleIreland', 'Ireland 2022–2026', y);
-      y = lay(ire, y + headerH);
+      y = place(ire, y + headerH);
       y += sectionGap;
       const japanHeaderY = y;
       sectionTitle('titleJapan', 'Japan 2025', y);
-      y = lay(jpn, y + headerH);
+      y = place(jpn, y + headerH);
       sp.style.height = (y + topPad) + 'px';
-      stage.scrollTop = 0;
-      setRegion('ireland');
-      gridScrollHandler = () => setRegion((stage.scrollTop + innerHeight * 0.42) >= japanHeaderY ? 'japan' : 'ireland');
+
+      // hard background separation, anchored just above the Japan title
+      document.body.classList.remove('region-japan');
+      bgJapan.classList.add('show');
+      const boundaryY = japanHeaderY - 64;
+      if (gridScrollHandler) stage.removeEventListener('scroll', gridScrollHandler);
+      gridScrollHandler = () => {
+        const rl = Math.max(0, Math.min(100, (boundaryY - stage.scrollTop) / innerHeight * 100));
+        const mask = `linear-gradient(to bottom, transparent ${rl}%, #000 ${rl}%)`;
+        bgJapan.style.maskImage = bgJapan.style.webkitMaskImage = mask;
+      };
       stage.addEventListener('scroll', gridScrollHandler, { passive: true });
+      gridScrollHandler();
+      return targets;
+    }
+
+    function ordered(slots) {
+      const targets = sectionView(slots, 'grid');
+      let z = 0;
+      targets.forEach((t, s) => {
+        s.style.left = t.x + 'px'; s.style.top = t.y + 'px';
+        s.style.setProperty('--rot', t.rot + 'deg');
+        s.style.setProperty('--sc', '1');
+        s.style.zIndex = ++z;
+      });
     }
 
     const delay = ms => new Promise(r => setTimeout(r, ms));
 
-    // gather into a stack -> riffle a couple times -> deal back out
+    // gather into a stack -> riffle -> deal out into the two scattered sections
     async function shuffle(slots) {
       if (busy) return;
       busy = true;
-      exitScroll();
       stage.style.pointerEvents = 'none';
-      const W = innerWidth, H = innerHeight, cx = W / 2, cy = H / 2;
+      stage.classList.add('shuffling');                 // suppress compounding shadows while stacked
+      stage.scrollTop = 0;
+      const targets = sectionView(slots, 'scatter');   // sets up sections + scattered targets
+      const cx = innerWidth / 2, cy = innerHeight / 2;
 
-      // 1) collect to a neat face-down stack
+      // 1) collect to a face-down stack at center
       slots.forEach((s, i) => {
         s.querySelector('.card').classList.remove('flipped');
         s.style.transition = 'left .32s ease, top .32s ease, transform .32s ease';
@@ -409,27 +427,27 @@
           s.style.left = cx + 'px';
           s.style.top = cy + 'px';
           s.style.setProperty('--rot', rand(-3, 3).toFixed(1) + 'deg');
-          s.style.zIndex = (i % 2) * slots.length + i;   // interleave the stacking order
+          s.style.zIndex = (i % 2) * slots.length + i;
         });
         await delay(170);
       }
 
-      // 3) deal back out into a fresh scatter, one after another
+      // 3) deal out to each card's section target, one after another
+      stage.classList.remove('shuffling');   // shadows fade back in as the cards spread out
       const n = slots.length;
-      const pos = pilePos(n);
-      const order = slots.map((_, i) => i).sort(() => rand(-1, 1)); // deal in random order
+      const order = slots.map((_, i) => i).sort(() => rand(-1, 1));
       order.forEach((idx, k) => {
-        const s = slots[idx], p = pos(idx);
-        const d = k * 38;
+        const s = slots[idx], t = targets.get(s);
+        const d = k * 30;
         s.style.transition = `left .42s cubic-bezier(.2,.8,.2,1) ${d}ms, top .42s cubic-bezier(.2,.8,.2,1) ${d}ms, transform .42s cubic-bezier(.2,.8,.2,1) ${d}ms`;
-        s.style.left = p.x + 'px'; s.style.top = p.y + 'px';
-        s.style.setProperty('--rot', p.rot.toFixed(1) + 'deg');
+        s.style.left = t.x + 'px'; s.style.top = t.y + 'px';
+        s.style.setProperty('--rot', t.rot.toFixed(1) + 'deg');
         s.style.setProperty('--sc', '1');
-        s.style.zIndex = k;
+        s.style.zIndex = k + 1;
       });
-      await delay(420 + n * 38 + 60);
+      await delay(420 + n * 30 + 60);
 
-      slots.forEach(s => s.style.transition = '');   // back to the default CSS transition
+      slots.forEach(s => s.style.transition = '');
       stage.style.pointerEvents = '';
       busy = false;
     }
