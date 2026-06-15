@@ -7,7 +7,7 @@
 <link rel="icon" type="image/svg+xml" href="favicon.svg" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Old+Standard+TT:ital,wght@0,400;0,700;1,400&family=Space+Mono&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Geist:wght@400;500&family=Old+Standard+TT:ital,wght@0,400;0,700;1,400&family=Space+Mono&display=swap" rel="stylesheet" />
 <style>
   :root {
     --felt: #cfe0c4;
@@ -48,10 +48,16 @@
   .grid-spacer { width: 100%; height: 0; pointer-events: none; }
   .section-title {
     position: absolute; left: 0; right: 0; text-align: center;
+    color: #fff; pointer-events: none;
+  }
+  .section-title .eyebrow {
+    font-family: "Geist", system-ui, sans-serif;
+    text-transform: uppercase; font-weight: 400; font-size: 13px; letter-spacing: -.2px;
+    margin-bottom: 14px;
+  }
+  .section-title .title-main {
     font-family: "Old Standard TT", Georgia, serif;
-    font-style: normal; font-weight: 400; font-size: 38px; letter-spacing: -.8px;
-    color: #fff;
-    pointer-events: none;
+    font-weight: 400; font-size: 48px; letter-spacing: -.8px; line-height: 1;
   }
 
   .slot {
@@ -155,16 +161,16 @@
     position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
     z-index: 5;
     display: flex; align-items: center; gap: 12px;
-    background: rgba(20,40,28,.5); border: 1px solid rgba(241,223,193,.3);
+    background: rgba(20,40,28,.5); border: 1px solid rgba(255,255,255,.3);
     padding: 9px 14px; border-radius: 999px;
-    font-size: 12px; color: var(--cream); backdrop-filter: blur(8px);
+    font-size: 12px; color: #fff; backdrop-filter: blur(8px);
   }
   .controls button {
-    font: inherit; color: var(--cream); background: transparent;
-    border: 1px solid rgba(241,223,193,.45); border-radius: 999px;
+    font: inherit; color: #fff; background: transparent;
+    border: 1px solid rgba(255,255,255,.5); border-radius: 999px;
     padding: 5px 12px; cursor: pointer;
   }
-  .controls button:hover { background: rgba(241,223,193,.16); }
+  .controls button:hover { background: rgba(255,255,255,.16); }
 
   /* ---------- MODAL (enlarged card) ---------- */
   .modal {
@@ -330,10 +336,11 @@
     const CW = 182, CH = 266;
     let gridScrollHandler = null;
 
-    function sectionTitle(id, text, y) {
+    function sectionTitle(id, eyebrow, title, y) {
       let t = document.getElementById(id);
       if (!t) { t = document.createElement('div'); t.id = id; t.className = 'section-title'; stage.appendChild(t); }
-      t.textContent = text; t.style.top = y + 'px'; t.style.display = '';
+      t.innerHTML = `<div class="eyebrow">${eyebrow}</div><div class="title-main">${title}</div>`;
+      t.style.top = y + 'px'; t.style.display = '';
     }
 
     // Lay both trips out as scrollable sections (Ireland, then Japan) with titles + a hard
@@ -343,8 +350,13 @@
       stage.classList.add('grid');
       let sp = document.getElementById('gridSpacer');
       if (!sp) { sp = document.createElement('div'); sp.id = 'gridSpacer'; sp.className = 'grid-spacer'; stage.appendChild(sp); }
-      const cols = 5, gapX = 20, gapY = 26, sectionGap = 210, topPad = 130, headerH = 118;
       const vw = stage.clientWidth;
+      const sidePad = 16;                                   // min margin on each side
+      const cols = vw < 680 ? 3 : vw < 1060 ? 4 : 5;        // 3 on mobile, 4 tablet, 5 desktop
+      const gapX = vw < 680 ? 12 : 20, gapY = vw < 680 ? 16 : 26;
+      const sc = Math.min(1, (vw - 2 * sidePad - (cols - 1) * gapX) / (cols * CW));  // scale cards to fit
+      const cw = CW * sc, ch = CH * sc;
+      const sectionGap = vw < 680 ? 120 : 210, topPad = vw < 680 ? 96 : 130, headerH = vw < 680 ? 108 : 138;
       const byOrder = (a, b) => a.dataset.order - b.dataset.order;
       const ire = slots.filter(s => s.dataset.region !== 'japan').sort(byOrder);
       const jpn = slots.filter(s => s.dataset.region === 'japan').sort(byOrder);
@@ -352,36 +364,36 @@
 
       function place(group, startY) {
         if (placement === 'grid') {
-          const gridW = cols * CW + (cols - 1) * gapX;
-          const x0 = Math.max(16, (vw - gridW) / 2);
+          const gridW = cols * cw + (cols - 1) * gapX;
+          const x0 = Math.max(sidePad, (vw - gridW) / 2);
           group.forEach((s, i) => {
             const r = Math.floor(i / cols), c = i % cols;
-            targets.set(s, { x: x0 + c * (CW + gapX) + CW / 2, y: startY + r * (CH + gapY) + CH / 2, rot: 0 });
+            targets.set(s, { x: x0 + c * (cw + gapX) + cw / 2, y: startY + r * (ch + gapY) + ch / 2, rot: 0, sc });
           });
           const rows = Math.ceil(group.length / cols);
-          return startY + rows * CH + Math.max(0, rows - 1) * gapY;
+          return startY + rows * ch + Math.max(0, rows - 1) * gapY;
         } else {  // scattered within the section band
-          const stepX = Math.min(CW * 0.86, (vw * 0.72) / cols), stepY = CH * 1.02;
+          const stepX = Math.min(cw * 0.86, (vw - 2 * sidePad) * (cols <= 3 ? 0.98 : 0.72) / cols), stepY = ch * 1.02;
           const x0 = vw / 2 - stepX * (cols - 1) / 2;
           group.forEach((s, i) => {
             const r = Math.floor(i / cols), c = i % cols;
             targets.set(s, {
               x: x0 + c * stepX + rand(-stepX * 0.2, stepX * 0.2),
-              y: startY + CH / 2 + r * stepY + rand(-stepY * 0.22, stepY * 0.22),
-              rot: rand(-17, 17),
+              y: startY + ch / 2 + r * stepY + rand(-stepY * 0.22, stepY * 0.22),
+              rot: rand(-17, 17), sc,
             });
           });
           const rows = Math.ceil(group.length / cols);
-          return startY + (rows - 1) * stepY + CH;
+          return startY + (rows - 1) * stepY + ch;
         }
       }
 
       let y = topPad;
-      sectionTitle('titleIreland', 'Ireland 2022–2026', y);
+      sectionTitle('titleIreland', 'Various dates, 2022–2026', 'Ireland', y);
       y = place(ire, y + headerH);
       y += sectionGap;
       const japanHeaderY = y;
-      sectionTitle('titleJapan', 'Japan 2025', y);
+      sectionTitle('titleJapan', 'October 2025', 'Japan', y);
       y = place(jpn, y + headerH);
       sp.style.height = (y + topPad) + 'px';
 
@@ -400,15 +412,19 @@
       return targets;
     }
 
-    function ordered(slots) {
-      const targets = sectionView(slots, 'grid');
+    let currentView = 'scatter';
+    function applyTargets(targets) {
       let z = 0;
       targets.forEach((t, s) => {
         s.style.left = t.x + 'px'; s.style.top = t.y + 'px';
-        s.style.setProperty('--rot', t.rot + 'deg');
-        s.style.setProperty('--sc', '1');
+        s.style.setProperty('--rot', (typeof t.rot === 'number' ? t.rot.toFixed(1) : t.rot) + 'deg');
+        s.style.setProperty('--sc', String(t.sc ?? 1));
         s.style.zIndex = ++z;
       });
+    }
+    function ordered(slots) {
+      currentView = 'grid';
+      applyTargets(sectionView(slots, 'grid'));
     }
 
     const delay = ms => new Promise(r => setTimeout(r, ms));
@@ -417,10 +433,12 @@
     async function shuffle(slots) {
       if (busy) return;
       busy = true;
+      currentView = 'scatter';
       stage.style.pointerEvents = 'none';
       stage.classList.add('shuffling');                 // suppress compounding shadows while stacked
       stage.scrollTop = 0;
       const targets = sectionView(slots, 'scatter');   // sets up sections + scattered targets
+      const sc = [...targets.values()][0]?.sc ?? 1;     // card scale for the current viewport
       const cx = innerWidth / 2, cy = innerHeight / 2;
 
       // 1) collect to a face-down stack at center
@@ -430,7 +448,7 @@
         s.style.left = cx + 'px';
         s.style.top = cy + 'px';
         s.style.setProperty('--rot', rand(-2, 2).toFixed(1) + 'deg');
-        s.style.setProperty('--sc', '1');
+        s.style.setProperty('--sc', String(sc));
         s.style.zIndex = i;
       });
       await delay(340);
@@ -465,7 +483,7 @@
         s.style.transition = `left .42s cubic-bezier(.2,.8,.2,1) ${d}ms, top .42s cubic-bezier(.2,.8,.2,1) ${d}ms, transform .42s cubic-bezier(.2,.8,.2,1) ${d}ms`;
         s.style.left = t.x + 'px'; s.style.top = t.y + 'px';
         s.style.setProperty('--rot', t.rot.toFixed(1) + 'deg');
-        s.style.setProperty('--sc', '1');
+        s.style.setProperty('--sc', String(t.sc ?? 1));
         s.style.zIndex = k + 1;
       });
       await delay(420 + n * 30 + 60);
@@ -524,6 +542,14 @@
     document.getElementById('reshuffle').addEventListener('click', () => shuffle(SLOTS));
     document.getElementById('flipdown').addEventListener('click', () =>
       SLOTS.forEach(s => s.querySelector('.card').classList.add('flipped')));
+
+    // re-lay-out (recompute columns/scale/centering) when the window is resized
+    let resizeTimer;
+    window.addEventListener('resize', () => {
+      if (busy || !SLOTS.length) return;
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => { if (!busy) applyTargets(sectionView(SLOTS, currentView)); }, 160);
+    });
 
     // ---------- modal (enlarged card, keeps its color treatment) ----------
     const modal = document.getElementById('modal');
