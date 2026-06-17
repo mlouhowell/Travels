@@ -528,9 +528,12 @@
         const card = slot.querySelector('.card');
         slot.addEventListener('click', () => {
           if (card.classList.contains('flipped')) {
+            if (card.dataset.justFlipped) return; // ignore taps until the flip-up animation finishes
             openModal(c);                 // already face-up -> enlarge into a modal
           } else {
             card.classList.add('flipped'); // face-down -> flip up to reveal (no flip-back)
+            card.dataset.justFlipped = '1';
+            setTimeout(() => { delete card.dataset.justFlipped; }, 650); // matches the .6s flip transition
             slot.style.zIndex = ++topZ;
             if (!stage.classList.contains('grid')) setRegion(c.region); // in the pile, the flipped card sets the backdrop (in the grid, scroll does)
           }
