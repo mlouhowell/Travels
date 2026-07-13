@@ -139,6 +139,15 @@
     /* gently aged: a little muted + warm, not punchy */
     filter: contrast(1.05) saturate(1.02) brightness(1.02) sepia(.12);
   }
+  /* .photo is a fractional width (80% of a 182px card, then scaled), and a
+     <video> is composited on its own layer whose size rounds to whole pixels
+     — so it can land a hair narrow and leak the grey backing along the right
+     edge, which reads as a broken corner. Overfill by a pixel; the parent's
+     rounded overflow clips the excess. */
+  .photo video {
+    width: calc(100% + 2px); height: calc(100% + 2px);
+    margin: -1px;
+  }
   .photo::before {
     content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 2;
     mix-blend-mode: overlay;
