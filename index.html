@@ -529,18 +529,10 @@
             <div class="face front">${cardFaceHTML(c)}</div>
             <div class="face back"></div>
           </div>`;
-        const card = slot.querySelector('.card');
         slot.addEventListener('click', () => {
-          if (card.classList.contains('flipped')) {
-            if (card.dataset.justFlipped) return; // ignore taps until the flip-up animation finishes
-            openModal(c);                 // already face-up -> enlarge into a modal
-          } else {
-            card.classList.add('flipped'); // face-down -> flip up to reveal (no flip-back)
-            card.dataset.justFlipped = '1';
-            setTimeout(() => { delete card.dataset.justFlipped; }, 650); // matches the .6s flip transition
-            slot.style.zIndex = ++topZ;
-            if (!stage.classList.contains('grid')) setRegion(c.region); // in the pile, the flipped card sets the backdrop (in the grid, scroll does)
-          }
+          openModal(c);                  // straight to the big card, no flip-to-reveal first
+          slot.style.zIndex = ++topZ;
+          if (!stage.classList.contains('grid')) setRegion(c.region); // in the pile, the opened card sets the backdrop (in the grid, scroll does)
         });
         // video cards play on hover, reset on leave
         const vid = slot.querySelector('video');
@@ -601,11 +593,13 @@
       if (item && item._card) openModal(item._card);
     });
 
+    let openedAt = 0;
     function openModal(c) {
       modalInner.innerHTML = cardFaceHTML(c);        // same .ace markup -> same grade/grain/color
       const scale = Math.min(innerHeight * 0.64 / 266, innerWidth * 0.78 / 182);
       modal.style.setProperty('--mscale', scale.toFixed(3));
       modal.classList.add('open');
+      openedAt = performance.now();
       buildModalNav(c);                              // section index on the left
       const v = modalInner.querySelector('video');   // play video cards in the modal
       if (v) v.play().catch(() => {});
@@ -613,8 +607,16 @@
     function closeModal() {
       modal.classList.remove('open');
       setTimeout(() => { if (!modal.classList.contains('open')) modalInner.innerHTML = ''; }, 240);
+      // opening one card opens the deck: everything turns face-up as the modal shrinks away
+      SLOTS.forEach(s => s.querySelector('.card').classList.add('flipped'));
     }
-    modal.addEventListener('click', closeModal);
+    // A quick second click — habit from when it took two clicks to open a card —
+    // used to land on the modal the instant it appeared and shut it again, which
+    // read as "the card just flipped and never opened". Swallow it.
+    modal.addEventListener('click', () => {
+      if (performance.now() - openedAt < 400) return;
+      closeModal();
+    });
     window.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
 
     loadDeck().then(deck => {
