@@ -115,14 +115,6 @@
 
   /* ---------- GENERATED CARD FACE ---------- */
   .ace { position: absolute; inset: 0; background: #fff; }
-  /* subtle halftone print texture across the whole card (paper + photo) so it reads as one printed object */
-  .ace::after {
-    content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 5;
-    background-image: radial-gradient(circle, rgba(28,26,14,.55) 0.45px, transparent 0.6px);
-    background-size: 3px 3px;
-    mix-blend-mode: multiply;
-    opacity: .12;
-  }
 
   .pip {
     position: absolute;
@@ -216,10 +208,13 @@
   /* left-side index: white tick lines that expand to reveal each image's name on hover */
   .modal-nav {
     position: absolute; left: 28px; top: 50%; transform: translateY(-50%);
-    display: flex; flex-direction: column; gap: 9px;
+    display: flex; flex-direction: column;
     max-height: 88vh; z-index: 2;
   }
-  .modal-nav .nav-item { display: flex; align-items: center; gap: 16px; height: 13px; cursor: pointer; }
+  /* No container gap: each item is 13px of line + the 9px that used to sit
+     between items, so the hit areas tile edge to edge and the cursor is
+     never in dead space between two lines. Lines stay 22px apart either way. */
+  .modal-nav .nav-item { display: flex; align-items: center; gap: 16px; height: 22px; cursor: pointer; }
   .modal-nav .nav-line {
     flex: none; height: 2px; width: 26px; background: rgba(255,255,255,.5);
     transition: width .25s cubic-bezier(.2,.8,.2,1), background .2s ease;
