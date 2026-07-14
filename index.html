@@ -199,7 +199,7 @@
     display: grid; place-items: center;
     background: rgba(10,20,14,.62);
     backdrop-filter: blur(4px);
-    cursor: zoom-out;
+    cursor: default;
     opacity: 0; pointer-events: none;
     transition: opacity .22s ease;
   }
@@ -584,6 +584,10 @@
         el.className = 'nav-item' + (card === current ? ' active' : '');
         el.innerHTML = `<span class="nav-line"></span><span class="nav-label">${card.caption}</span>`;
         el._card = card;
+        // hovering an entry previews its card; the selected one comes back on leave.
+        // Only a click makes the preview stick (see the modalNav click handler).
+        el.addEventListener('mouseenter', () => renderFace(card));
+        el.addEventListener('mouseleave', () => renderFace(selected));
         modalNav.appendChild(el);
       });
     }
@@ -594,15 +598,24 @@
     });
 
     let openedAt = 0;
-    function openModal(c) {
+    let selected = null;                             // the card the modal is actually on
+
+    // paint a card into the modal without changing what's selected — used for hover previews
+    function renderFace(c) {
+      if (!c) return;
       modalInner.innerHTML = cardFaceHTML(c);        // same .ace markup -> same grade/grain/color
+      const v = modalInner.querySelector('video');   // play video cards in the modal
+      if (v) v.play().catch(() => {});
+    }
+
+    function openModal(c) {
+      selected = c;
+      renderFace(c);
       const scale = Math.min(innerHeight * 0.64 / 266, innerWidth * 0.78 / 182);
       modal.style.setProperty('--mscale', scale.toFixed(3));
       modal.classList.add('open');
       openedAt = performance.now();
       buildModalNav(c);                              // section index on the left
-      const v = modalInner.querySelector('video');   // play video cards in the modal
-      if (v) v.play().catch(() => {});
     }
     function closeModal() {
       modal.classList.remove('open');
