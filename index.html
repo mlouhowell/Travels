@@ -240,6 +240,52 @@
   .modal-nav .nav-item:hover .nav-line { width: 56px; background: #fff; }
   .modal-nav .nav-item:hover .nav-label { opacity: 1; transform: translateX(0); }
 
+  /* On phones there's no room down the side, and no hover to reveal a name —
+     so the index lies along the bottom as a row of ticks, and the selected
+     card's caption sits above its tick on a timeline-style angle. */
+  @media (max-width: 600px) {
+    .modal-nav {
+      left: 0; right: 0; top: auto; bottom: 76px;
+      transform: none;
+      flex-direction: row; justify-content: center; align-items: flex-end;
+      max-height: none;
+    }
+    .modal-nav .nav-item {
+      position: relative;
+      flex-direction: column; justify-content: flex-end;
+      width: 22px; height: 26px;      /* ticks tile edge to edge, same as the desktop column */
+      gap: 0;
+    }
+    /* ticks stand upright: the desktop rules animate width, these animate height */
+    .modal-nav .nav-line {
+      width: 2px; height: 16px;
+      transition: height .25s cubic-bezier(.2,.8,.2,1), background .2s ease;
+    }
+    .modal-nav .nav-item.active .nav-line,
+    .modal-nav:hover .nav-item.active .nav-line { width: 2px; height: 26px; background: #fff; }
+    .modal-nav:hover .nav-line,
+    .modal-nav .nav-item:hover .nav-line { width: 2px; height: 22px; }
+
+    /* label runs up the line, reading bottom-to-top, centred on its tick */
+    .modal-nav .nav-label {
+      position: absolute; bottom: 100%; left: 50%;
+      writing-mode: vertical-rl; transform: translateX(-50%) rotate(180deg);
+      transform-origin: center;
+      margin-bottom: 8px;
+      font-size: 14px; line-height: 1; text-align: center;
+    }
+    /* No hover on touch — the selected card names itself instead. Tapping still
+       fires :hover on mobile, so these must re-assert the vertical transform or
+       the desktop hover rule flips the label back to horizontal mid-tap. */
+    .modal-nav .nav-item:hover .nav-label {
+      opacity: 0; transform: translateX(-50%) rotate(180deg);
+    }
+    .modal-nav .nav-item.active .nav-label,
+    .modal-nav .nav-item.active:hover .nav-label {
+      opacity: 1; transform: translateX(-50%) rotate(180deg);
+    }
+  }
+
   /* ---------- standard ML Howell footer ---------- */
   #footer {
     position: fixed;
@@ -576,7 +622,16 @@
     const modalNav = document.getElementById('modalNav');
 
     // left-side index of the images in the current card's section
+    let navRegion = null;
     function buildModalNav(current) {
+      // Same section: just move the active mark. Rebuilding would recreate every
+      // line, so they'd all re-animate from their base width — the flicker you get
+      // when clicking through the index.
+      if (navRegion === current.region && modalNav.children.length) {
+        [...modalNav.children].forEach(el => el.classList.toggle('active', el._card === current));
+        return;
+      }
+      navRegion = current.region;
       const items = DECK.filter(d => d.region === current.region).sort((a, b) => a.order - b.order);
       modalNav.innerHTML = '';
       items.forEach(card => {
