@@ -328,6 +328,10 @@
     opacity: 1;
     transform: translate(-50%, -50%) rotate(var(--r)) scale(var(--card-sc));
   }
+  /* placed here rather than inline, so the phone rules below can move them */
+  .intro-extra:nth-of-type(1) { --x: 5%;  --y: 32%; --r: -12deg; --d: .45s; }
+  .intro-extra:nth-of-type(2) { --x: 14%; --y: 88%; --r: 8deg;   --d: .6s;  }
+  .intro-extra:nth-of-type(3) { --x: 93%; --y: 11%; --r: 14deg;  --d: .75s; }
 
   /* printed running head above the title */
   .intro-eyebrow {
@@ -375,9 +379,10 @@
     .intro-card { display: none; }
     .intro-eyebrow { margin-bottom: 18px; }
     .intro-title { font-size: clamp(34px, 11vw, 56px); }
-    .intro-extra:nth-of-type(1) { --x: -1%;  --y: 17%; --r: -14deg; }
-    .intro-extra:nth-of-type(2) { --x: 12%;  --y: 90%; --r: 9deg;   }
-    .intro-extra:nth-of-type(3) { --x: 101%; --y: 34%; --r: 13deg;  }
+    /* the type runs down the middle band, so the cards keep to the corners */
+    .intro-extra:nth-of-type(1) { --x: -2%;  --y: 9%;  --r: -14deg; }
+    .intro-extra:nth-of-type(2) { --x: 10%;  --y: 96%; --r: 9deg;   }
+    .intro-extra:nth-of-type(3) { --x: 100%; --y: 12%; --r: 13deg;  }
   }
 
   /* the title page stops short of the bottom of the screen, so the footer stays
@@ -406,9 +411,9 @@
 
   <div class="stage" id="stage">
     <div class="intro" id="intro">
-      <div class="intro-extra" style="--x:5%;  --y:32%; --r:-12deg; --d:.45s"></div>
-      <div class="intro-extra" style="--x:14%; --y:88%; --r:8deg;   --d:.6s"></div>
-      <div class="intro-extra" style="--x:93%; --y:11%; --r:14deg;  --d:.75s"></div>
+      <div class="intro-extra"></div>
+      <div class="intro-extra"></div>
+      <div class="intro-extra"></div>
       <div class="intro-inner">
         <div class="intro-eyebrow">2022 &mdash; 2026</div>
         <h1 class="intro-title">A Photo Journal <em>of</em> Joyful Moments and Adventures Home <em>and</em> Abroad</h1>
