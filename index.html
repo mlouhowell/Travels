@@ -105,6 +105,9 @@
   }
   /* while the deck is stacked/riffling, drop the shadow so overlaps don't compound into a dark blob */
   .stage.shuffling .face { box-shadow: 0 2px 5px rgba(0,0,0,0), 0 8px 20px -6px rgba(0,0,0,0); }
+  /* mid-deal a card isn't where it looks like it is, so it shouldn't take a
+     click — but only the cards opt out, or the stage stops scrolling too */
+  .stage.dealing .slot { pointer-events: none; }
   .face.front { transform: rotateY(180deg); }
   /* each card's back matches its own region/section (green for Ireland, purple for Japan) */
   .face.back  {
@@ -621,7 +624,7 @@
       if (busy) return;
       busy = true;
       currentView = 'scatter';
-      stage.style.pointerEvents = 'none';
+      stage.classList.add('dealing');                   // cards ignore clicks mid-deal; the page still scrolls
       stage.classList.add('shuffling');                 // suppress compounding shadows while stacked
       if (!keepScroll) stage.scrollTop = introH();      // top of the deck, just below the title page
       const targets = sectionView(slots, 'scatter');   // sets up sections + scattered targets
@@ -681,7 +684,7 @@
       await delay(420 + n * 30 + 60);
 
       slots.forEach(s => s.style.transition = '');
-      stage.style.pointerEvents = '';
+      stage.classList.remove('dealing');
       busy = false;
     }
 
