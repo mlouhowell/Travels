@@ -281,7 +281,7 @@
        side of it. Both are measured off the same gutter, so they can't collide
        at any width — a percentage alone drifts, because the line grows with vw
        while the card position doesn't. */
-    --title-w: min(640px, 100vw - 470px);   /* vw, not %, or it resolves
+    --title-w: min(470px, 100vw - 560px);   /* vw, not %, or it resolves
                                              against a different box in each use */
     --gutter: calc((100% - var(--title-w)) / 2);
     min-height: 66vh;   /* grows if the type needs more room than that */
@@ -399,7 +399,7 @@
       <img class="intro-sketch sketch-stem" src="sketches/flower-stem.png" alt="" />
       <div class="intro-inner">
         <div class="intro-eyebrow">2022 &mdash; 2026</div>
-        <h1 class="intro-title">A Photo Journal <em>of</em> Joyful Moments</h1>
+        <h1 class="intro-title">Photo Journal</h1>
       </div>
     </div>
   </div>
