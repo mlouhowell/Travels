@@ -302,6 +302,13 @@
   .intro {
     position: absolute; top: 0; left: 0; right: 0; z-index: 400;
     --card-sc: .6;      /* every card on the title page is dealt at one size */
+    /* The type is held to a column and the cards live in the margins either
+       side of it. Both are measured off the same gutter, so they can't collide
+       at any width — a percentage alone drifts, because the line grows with vw
+       while the card position doesn't. */
+    --title-w: min(1180px, 100vw - 340px);   /* vw, not %, or it resolves
+                                             against a different box in each use */
+    --gutter: calc((100% - var(--title-w)) / 2);
     min-height: 66vh;   /* grows if the type needs more room than that */
     background: var(--paper);
     color: var(--paper-ink);
@@ -328,10 +335,11 @@
     opacity: 1;
     transform: translate(-50%, -50%) rotate(var(--r)) scale(var(--card-sc));
   }
-  /* placed here rather than inline, so the phone rules below can move them */
-  .intro-extra:nth-of-type(1) { --x: 5%;  --y: 32%; --r: -12deg; --d: .45s; }
-  .intro-extra:nth-of-type(2) { --x: 14%; --y: 88%; --r: 8deg;   --d: .6s;  }
-  .intro-extra:nth-of-type(3) { --x: 93%; --y: 11%; --r: 14deg;  --d: .75s; }
+  /* in CSS rather than inline, so the narrower rules below can move them */
+  .intro-extra:nth-of-type(1) { --x: calc(var(--gutter) * .52);          --y: 30%; --r: -12deg; --d: .45s; }
+  .intro-extra:nth-of-type(2) { --x: calc(var(--gutter) * .66);          --y: 87%; --r: 8deg;   --d: .6s;  }
+  .intro-extra:nth-of-type(3) { --x: calc(100% - var(--gutter) * .52);   --y: 12%; --r: 14deg;  --d: .75s; }
+  .intro-extra:nth-of-type(4) { --x: calc(100% - var(--gutter) * .62);   --y: 66%; --r: 7deg;   --d: .9s;  }
 
   /* printed running head above the title */
   .intro-eyebrow {
@@ -342,6 +350,7 @@
 
   /* the big line — Old Standard TT, set as tight as the reference */
   .intro-title {
+    max-width: var(--title-w); margin-inline: auto;
     font-family: "Old Standard TT", Georgia, serif;
     font-weight: 400;
     font-size: clamp(38px, 8.4vw, 120px);
@@ -351,38 +360,20 @@
   }
   .intro-title em { font-style: italic; }
 
-  /* one card from the deck laid over the type, the way a clipping sits on a
-     printed page. Kept at true 182x266 and scaled whole, so the pips and
-     caption stay in proportion with the real cards. It sits out in the right
-     margin with the others — nothing crosses the type. */
-  .intro-card {
-    position: absolute;
-    right: -12%; top: 62%;
-    width: var(--cw); height: var(--ch);
-    border-radius: 9px; overflow: hidden;
-    box-shadow: 0 3px 8px rgba(0,0,0,.16), 0 18px 40px -14px rgba(0,0,0,.34);
-    pointer-events: none; opacity: 0;
-    transform: translateY(-50%) rotate(13deg) scale(calc(var(--card-sc) * .92));
-    transition: opacity .7s ease, transform .9s cubic-bezier(.2,.8,.2,1);
+  /* Narrow enough and there are no margins to lay cards in — holding the
+     gutter would squeeze the headline into a column. The type takes the full
+     width instead and the cards keep to the corners above and below it. */
+  @media (max-width: 1100px) {
+    .intro { --card-sc: .46; --title-w: 100%; }
+    .intro-extra:nth-of-type(1) { --x: 6%;  --y: 11%; --r: -14deg; }
+    .intro-extra:nth-of-type(2) { --x: 14%; --y: 94%; --r: 9deg;   }
+    .intro-extra:nth-of-type(3) { --x: 94%; --y: 13%; --r: 13deg;  }
+    .intro-extra:nth-of-type(4) { display: none; }   /* the ace sits these out */
   }
-  .intro-card.in {
-    opacity: 1;
-    transform: translateY(-50%) rotate(7deg) scale(var(--card-sc));
-  }
-
-  @media (max-width: 1100px) { .intro { --card-sc: .46; } .intro-card { right: -4%; } }
   @media (max-width: 700px) {
-    /* A phone has no margins to lay cards in, and a card in the flow made the
-       page a screen and a half tall. The scattered three peek in from the edges
-       behind the type instead, and the ace sits this one out. */
-    .intro { --card-sc: .46; min-height: 56vh; padding: 28px 20px; }
-    .intro-card { display: none; }
+    .intro { min-height: 56vh; padding: 28px 20px; }
     .intro-eyebrow { margin-bottom: 18px; }
     .intro-title { font-size: clamp(34px, 11vw, 56px); }
-    /* the type runs down the middle band, so the cards keep to the corners */
-    .intro-extra:nth-of-type(1) { --x: -2%;  --y: 9%;  --r: -14deg; }
-    .intro-extra:nth-of-type(2) { --x: 10%;  --y: 96%; --r: 9deg;   }
-    .intro-extra:nth-of-type(3) { --x: 100%; --y: 12%; --r: 13deg;  }
   }
 
   /* the title page stops short of the bottom of the screen, so the footer stays
@@ -414,10 +405,10 @@
       <div class="intro-extra"></div>
       <div class="intro-extra"></div>
       <div class="intro-extra"></div>
+      <div class="intro-extra"></div>
       <div class="intro-inner">
         <div class="intro-eyebrow">2022 &mdash; 2026</div>
         <h1 class="intro-title">A Photo Journal <em>of</em> Joyful Moments and Adventures Home <em>and</em> Abroad</h1>
-        <div class="intro-card" id="introCard"></div>
       </div>
     </div>
   </div>
@@ -849,21 +840,16 @@
     loadDeck().then(deck => {
       DECK = deck;
       [enc(BACKDROPS.ireland), enc(BACKDROPS.japan), ...deck.map(d => enc(DIR + d.file) + (d.v ? '?v=' + d.v : ''))].forEach(p => { const i = new Image(); i.src = p; });
-      // the ace of clubs deals itself onto the title page, with a few more of
-      // the deck scattered into the margins behind the type
-      const introCard = document.getElementById('introCard');
-      const c = deck.find(d => d.region === 'ireland' && d.rank === 'A') || deck[0];
-      introCard.innerHTML = cardFaceHTML(c);
+      // four of the deck scatter into the margins of the title page, the ace of
+      // clubs last (it's the one that sits the narrow layouts out)
       const ire = deck.filter(d => d.region === 'ireland'), jpn = deck.filter(d => d.region === 'japan');
-      const extras = [jpn[0], ire[5], jpn[10]];
-      document.querySelectorAll('.intro-extra').forEach((el, i) => {
-        const card = extras[i] || deck[i];
+      const picks = [jpn[0], ire[5], jpn[10], ire.find(d => d.rank === 'A')];
+      const introCards = document.querySelectorAll('.intro-extra');
+      introCards.forEach((el, i) => {
+        const card = picks[i] || deck[i];
         if (card) el.innerHTML = cardFaceHTML(card);
       });
-      requestAnimationFrame(() => {
-        introCard.classList.add('in');
-        document.querySelectorAll('.intro-extra').forEach(el => el.classList.add('in'));
-      });
+      requestAnimationFrame(() => introCards.forEach(el => el.classList.add('in')));
       SLOTS = build(deck);
       onStageScroll();                                    // deal now if they already scrolled down
       if (dealPending) dealDeck();
