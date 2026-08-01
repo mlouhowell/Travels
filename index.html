@@ -29,6 +29,15 @@
     --ch: 266px;        /* card height (~0.686 ratio) */
     --paper: #EFEDE7;   /* intro page stock */
     --paper-ink: #2D2D2D;
+    /* the stock's own faint ruling: soft-edged bands, two periods that don't
+       divide into each other, so it never reads as a grid */
+    --paper-lines:
+      repeating-linear-gradient(180deg,
+        rgba(120,110,94,0) 0, rgba(120,110,94,.045) 1.5px,
+        rgba(120,110,94,0) 3.5px, rgba(120,110,94,0) 47px),
+      repeating-linear-gradient(180deg,
+        rgba(120,110,94,0) 0, rgba(120,110,94,.028) 1px,
+        rgba(120,110,94,0) 3px, rgba(120,110,94,0) 109px);
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -285,7 +294,8 @@
                                              against a different box in each use */
     --gutter: calc((100% - var(--title-w)) / 2);
     min-height: 66vh;   /* grows if the type needs more room than that */
-    background: var(--paper);
+    background-color: var(--paper);
+    background-image: var(--paper-lines);
     color: var(--paper-ink);
     display: grid; place-items: center;
     padding: 40px 24px;
@@ -295,7 +305,10 @@
      anyway there's more of it up there rather than the green backdrop */
   .intro::before {
     content: ""; position: absolute; left: 0; right: 0; bottom: 100%;
-    height: 100vh; background: var(--paper);
+    height: 100vh;
+    background-color: var(--paper);
+    background-image: var(--paper-lines);
+    background-position: bottom;   /* rules meet the page's own at the seam */
   }
   .intro-inner { position: relative; z-index: 2; max-width: 1180px; width: 100%; }
 
@@ -406,7 +419,7 @@
 
   <div class="modal" id="modal"><div class="modal-nav" id="modalNav"></div><div class="modal-inner" id="modalInner"></div></div>
 
-  <div id="footer"><a href="https://mary-louise.com" target="_blank" rel="noopener">By ML Howell</a> · V2.2 · August 2026</div>
+  <div id="footer"><a href="https://mary-louise.com" target="_blank" rel="noopener">By ML Howell</a> · V2.3 · August 2026</div>
 
   <script>
     const DIR  = "photos/";
