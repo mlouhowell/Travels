@@ -249,9 +249,8 @@
   .modal-nav .nav-item:hover .nav-line { width: 56px; background: #fff; }
   .modal-nav .nav-item:hover .nav-label { opacity: 1; transform: translateX(0); }
 
-  /* On phones there's no room down the side, and no hover to reveal a name —
-     so the index lies along the bottom as a row of ticks, and the selected
-     card's caption sits above its tick on a timeline-style angle. */
+  /* On phones there's no room down the side and no hover to reveal a name, so
+     the index lies along the bottom as a plain row of ticks. */
   @media (max-width: 600px) {
     .modal-nav {
       left: 0; right: 0; top: auto; bottom: 76px;
@@ -275,24 +274,10 @@
     .modal-nav:hover .nav-line,
     .modal-nav .nav-item:hover .nav-line { width: 2px; height: 22px; }
 
-    /* label runs up the line, reading bottom-to-top, centred on its tick */
-    .modal-nav .nav-label {
-      position: absolute; bottom: 100%; left: 50%;
-      writing-mode: vertical-rl; transform: translateX(-50%) rotate(180deg);
-      transform-origin: center;
-      margin-bottom: 8px;
-      font-size: 14px; line-height: 1; text-align: center;
-    }
-    /* No hover on touch — the selected card names itself instead. Tapping still
-       fires :hover on mobile, so these must re-assert the vertical transform or
-       the desktop hover rule flips the label back to horizontal mid-tap. */
-    .modal-nav .nav-item:hover .nav-label {
-      opacity: 0; transform: translateX(-50%) rotate(180deg);
-    }
-    .modal-nav .nav-item.active .nav-label,
-    .modal-nav .nav-item.active:hover .nav-label {
-      opacity: 1; transform: translateX(-50%) rotate(180deg);
-    }
+    /* The name used to run up its tick, but the card fills the screen on a
+       phone and the two sat on top of each other. The card already names the
+       place under the photo, so the index is just ticks here. */
+    .modal-nav .nav-label { display: none; }
   }
 
   /* ---------- INTRO (title page) ---------- */
@@ -430,7 +415,7 @@
 
   <div class="modal" id="modal"><div class="modal-nav" id="modalNav"></div><div class="modal-inner" id="modalInner"></div></div>
 
-  <div id="footer"><a href="https://mary-louise.com" target="_blank" rel="noopener">By ML Howell</a> · V1.4 · July 2026</div>
+  <div id="footer"><a href="https://mary-louise.com" target="_blank" rel="noopener">By ML Howell</a> · V1.5 · July 2026</div>
 
   <script>
     const DIR  = "photos/";
