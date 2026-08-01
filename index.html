@@ -281,7 +281,7 @@
        side of it. Both are measured off the same gutter, so they can't collide
        at any width — a percentage alone drifts, because the line grows with vw
        while the card position doesn't. */
-    --title-w: min(560px, 100vw - 480px);   /* vw, not %, or it resolves
+    --title-w: min(640px, 100vw - 470px);   /* vw, not %, or it resolves
                                              against a different box in each use */
     --gutter: calc((100% - var(--title-w)) / 2);
     min-height: 66vh;   /* grows if the type needs more room than that */
@@ -347,8 +347,8 @@
     max-width: var(--title-w); margin-inline: auto;
     font-family: "Old Standard TT", Georgia, serif;
     font-weight: 400;
-    font-size: clamp(38px, 8.4vw, 64px);
-    line-height: 1.0625;        /* 68 at 64 */
+    font-size: clamp(38px, 8.4vw, 78px);
+    line-height: 1.026;         /* 80 at 78 */
     letter-spacing: -.045em;    /* -4 at 88 */
     text-wrap: balance;
   }
@@ -406,7 +406,7 @@
 
   <div class="modal" id="modal"><div class="modal-nav" id="modalNav"></div><div class="modal-inner" id="modalInner"></div></div>
 
-  <div id="footer"><a href="https://mary-louise.com" target="_blank" rel="noopener">By ML Howell</a> · V2.1 · July 2026</div>
+  <div id="footer"><a href="https://mary-louise.com" target="_blank" rel="noopener">By ML Howell</a> · V2.2 · August 2026</div>
 
   <script>
     const DIR  = "photos/";
