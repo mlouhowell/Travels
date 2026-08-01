@@ -317,9 +317,9 @@
     transform: translate(-50%, -50%) rotate(var(--r)) scale(var(--card-sc));
   }
   /* in CSS rather than inline, so the narrower rules below can move them */
-  .intro-extra:nth-of-type(1) { --x: calc(var(--gutter) * .52);          --y: 30%; --r: -12deg; --d: .45s; }
-  .intro-extra:nth-of-type(2) { --x: calc(var(--gutter) * .66);          --y: 87%; --r: 8deg;   --d: .6s;  }
-  .intro-extra:nth-of-type(3) { --x: calc(100% - var(--gutter) * .58);   --y: 58%; --r: 10deg; --d: .75s; }
+  .intro-extra:nth-of-type(1) { --x: calc(var(--gutter) * .64);          --y: 30%; --r: -12deg; --d: .45s; }
+  .intro-extra:nth-of-type(2) { --x: calc(var(--gutter) * .78);          --y: 87%; --r: 8deg;   --d: .6s;  }
+  .intro-extra:nth-of-type(3) { --x: calc(100% - var(--gutter) * .70);   --y: 58%; --r: 10deg; --d: .75s; }
 
   /* printed running head above the title */
   .intro-eyebrow {
@@ -334,7 +334,7 @@
     font-family: "Old Standard TT", Georgia, serif;
     font-weight: 400;
     font-size: clamp(38px, 8.4vw, 120px);
-    line-height: .933;          /* 112 at 120 */
+    line-height: .9;            /* 108 at 120 */
     letter-spacing: -.033em;    /* -4 at 120 */
     text-wrap: balance;
   }
