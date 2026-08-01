@@ -257,11 +257,12 @@
       transform: none;
       flex-direction: row; justify-content: center; align-items: flex-end;
       max-height: none;
+      touch-action: none;             /* the row is scrubbed, not scrolled */
     }
     .modal-nav .nav-item {
       position: relative;
       flex-direction: column; justify-content: flex-end;
-      width: 22px; height: 26px;      /* ticks tile edge to edge, same as the desktop column */
+      width: 22px; height: 44px;      /* ticks tile edge to edge; the extra height is thumb room */
       gap: 0;
     }
     /* ticks stand upright: the desktop rules animate width, these animate height */
@@ -415,7 +416,7 @@
 
   <div class="modal" id="modal"><div class="modal-nav" id="modalNav"></div><div class="modal-inner" id="modalInner"></div></div>
 
-  <div id="footer"><a href="https://mary-louise.com" target="_blank" rel="noopener">By ML Howell</a> · V1.5 · July 2026</div>
+  <div id="footer"><a href="https://mary-louise.com" target="_blank" rel="noopener">By ML Howell</a> · V1.6 · July 2026</div>
 
   <script>
     const DIR  = "photos/";
@@ -777,6 +778,30 @@
       e.stopPropagation();                              // don't close the modal
       const item = e.target.closest('.nav-item');
       if (item && item._card) openModal(item._card);
+    });
+
+    // Touch has no hover, so the index is scrubbed instead: drag along the row
+    // and the cards flick past under your finger, one per tick.
+    let scrubbing = false;
+    const itemAt = t => document.elementFromPoint(t.clientX, t.clientY)?.closest?.('.nav-item');
+    function scrubTo(item) {
+      if (!item || !item._card || item._card === selected) return;
+      selected = item._card;
+      renderFace(selected);
+      [...modalNav.children].forEach(el => el.classList.toggle('active', el === item));
+    }
+    modalNav.addEventListener('touchstart', e => {
+      scrubbing = true;
+      scrubTo(itemAt(e.touches[0]));
+    }, { passive: true });
+    modalNav.addEventListener('touchmove', e => {
+      if (!scrubbing) return;
+      e.preventDefault();                               // the drag scrubs, it doesn't scroll
+      scrubTo(itemAt(e.touches[0]));
+    }, { passive: false });
+    modalNav.addEventListener('touchend', e => {
+      scrubbing = false;
+      e.stopPropagation();                              // a scrub shouldn't reach the modal and close it
     });
 
     let openedAt = 0;
