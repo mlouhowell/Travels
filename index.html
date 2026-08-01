@@ -298,6 +298,7 @@
      Ireland section peeks up from below). */
   .intro {
     position: absolute; top: 0; left: 0; right: 0; z-index: 400;
+    --card-sc: .6;      /* every card on the title page is dealt at one size */
     min-height: 66vh;   /* grows if the type needs more room than that */
     background: var(--paper);
     color: var(--paper-ink);
@@ -313,19 +314,17 @@
     position: absolute; z-index: 1;
     left: var(--x); top: var(--y);
     width: var(--cw); height: var(--ch);
-    --k: 1;                                  /* viewport size multiplier */
     border-radius: 9px; overflow: hidden;
     box-shadow: 0 3px 8px rgba(0,0,0,.14), 0 16px 36px -16px rgba(0,0,0,.3);
     pointer-events: none; opacity: 0;
-    transform: translate(-50%, -50%) rotate(var(--r)) scale(calc(var(--s) * var(--k) * .92));
+    transform: translate(-50%, -50%) rotate(var(--r)) scale(calc(var(--card-sc) * .92));
     transition: opacity .8s ease, transform 1s cubic-bezier(.2,.8,.2,1);
     transition-delay: var(--d, 0s);
   }
   .intro-extra.in {
     opacity: 1;
-    transform: translate(-50%, -50%) rotate(var(--r)) scale(calc(var(--s) * var(--k)));
+    transform: translate(-50%, -50%) rotate(var(--r)) scale(var(--card-sc));
   }
-  @media (max-width: 1100px) { .intro-extra { --k: .74; } }
   @media (max-width: 700px)  { .intro-extra { display: none; } }   /* no margins to spare */
 
   /* printed running head above the title */
@@ -348,33 +347,35 @@
 
   /* one card from the deck laid over the type, the way a clipping sits on a
      printed page. Kept at true 182x266 and scaled whole, so the pips and
-     caption stay in proportion with the real cards. */
+     caption stay in proportion with the real cards.
+     It multiplies with the type behind it — the card keeps its white over bare
+     paper, and the letters print straight through it where they meet. */
   .intro-card {
     position: absolute;
+    mix-blend-mode: multiply;
     right: 0; top: 66%;   /* sits at the short end of the last lines, not mid-word */
     width: var(--cw); height: var(--ch);
-    --intro-card-sc: .82;
     border-radius: 9px; overflow: hidden;
     box-shadow: 0 3px 8px rgba(0,0,0,.16), 0 18px 40px -14px rgba(0,0,0,.34);
     pointer-events: none; opacity: 0;
-    transform: translateY(-50%) rotate(13deg) scale(calc(var(--intro-card-sc) * .94));
+    transform: translateY(-50%) rotate(13deg) scale(calc(var(--card-sc) * .92));
     transition: opacity .7s ease, transform .9s cubic-bezier(.2,.8,.2,1);
   }
   .intro-card.in {
     opacity: 1;
-    transform: translateY(-50%) rotate(7deg) scale(var(--intro-card-sc));
+    transform: translateY(-50%) rotate(7deg) scale(var(--card-sc));
   }
 
-  @media (max-width: 1100px) { .intro-card { --intro-card-sc: .66; right: -4%; } }
+  @media (max-width: 1100px) { .intro { --card-sc: .46; } .intro-card { right: -4%; } }
   @media (max-width: 700px) {
     /* no room to overlap on a phone — the card tucks under the type instead */
+    .intro { --card-sc: .58; }
     .intro-card {
       position: relative; right: auto; top: auto;
-      --intro-card-sc: .58;
       margin: calc(var(--ch) * -.19) auto calc(var(--ch) * -.2);
-      transform: rotate(-9deg) scale(calc(var(--intro-card-sc) * .94));
+      transform: rotate(-9deg) scale(calc(var(--card-sc) * .92));
     }
-    .intro-card.in { transform: rotate(-4deg) scale(var(--intro-card-sc)); }
+    .intro-card.in { transform: rotate(-4deg) scale(var(--card-sc)); }
     .intro-title { font-size: clamp(34px, 11vw, 56px); }
   }
 
@@ -404,9 +405,9 @@
 
   <div class="stage" id="stage">
     <div class="intro" id="intro">
-      <div class="intro-extra" style="--x:5%;  --y:32%;  --r:-12deg; --s:.56; --d:.45s"></div>
-      <div class="intro-extra" style="--x:14%; --y:88%;  --r:8deg;   --s:.46; --d:.6s"></div>
-      <div class="intro-extra" style="--x:93%; --y:11%;  --r:14deg;  --s:.5;  --d:.75s"></div>
+      <div class="intro-extra" style="--x:5%;  --y:32%; --r:-12deg; --d:.45s"></div>
+      <div class="intro-extra" style="--x:14%; --y:88%; --r:8deg;   --d:.6s"></div>
+      <div class="intro-extra" style="--x:93%; --y:11%; --r:14deg;  --d:.75s"></div>
       <div class="intro-inner">
         <div class="intro-eyebrow">[ 2022 &mdash; 2026 ]</div>
         <h1 class="intro-title">A Photo Journal <em>of</em> Joyful Moments and Adventures Home <em>and</em> Abroad</h1>
