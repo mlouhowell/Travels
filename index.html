@@ -127,8 +127,9 @@
   .pip {
     position: absolute;
     display: flex; flex-direction: column; align-items: center;
-    line-height: .82; color: #9A9A98;            /* quiet grey, both suits */
+    line-height: .82; color: #0A0A0A;            /* Ireland: black rank + club */
   }
+  .ace.japan .pip { color: #D23934; }            /* Japan: red rank + heart symbol */
   /* rank and suit take a corner each, on the diagonal, so neither crowds the
      narrow band above and below the photo */
   .pip.tl { top: 8px; left: 9px; }
@@ -136,7 +137,13 @@
   .pip.bl { bottom: 8px; left: 9px; transform: rotate(180deg); }
   .pip.br { bottom: 8px; right: 9px; transform: rotate(180deg); }
 
-  .rank { font-family: "Space Mono", ui-monospace, monospace; font-weight: 400; font-size: 10px; }
+  /* Space Mono ships regular and bold only; font-synthesis guards against a
+     fallback being faux-bolded if the face is slow or blocked */
+  .rank {
+    font-family: "Space Mono", ui-monospace, monospace;
+    font-weight: 400; font-synthesis: none;
+    font-size: 10px;
+  }
   .club { width: 7px; height: auto; display: block; }
 
   .photo {
