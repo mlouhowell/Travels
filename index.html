@@ -298,7 +298,7 @@
      Ireland section peeks up from below). */
   .intro {
     position: absolute; top: 0; left: 0; right: 0; z-index: 400;
-    min-height: 78vh;   /* grows if the type needs more room than that */
+    min-height: 66vh;   /* grows if the type needs more room than that */
     background: var(--paper);
     color: var(--paper-ink);
     display: grid; place-items: center;
@@ -490,7 +490,7 @@
 
     // The title page occupies the top of the scroll, a little short of a full
     // screen so the Ireland section peeks up from underneath.
-    const INTRO_RATIO = 0.78;
+    const INTRO_RATIO = 0.66;
     function sizeIntro() { intro.style.minHeight = Math.round(innerHeight * INTRO_RATIO) + 'px'; }
     const introH = () => intro.offsetHeight;
     sizeIntro();
