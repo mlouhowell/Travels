@@ -319,8 +319,7 @@
   /* in CSS rather than inline, so the narrower rules below can move them */
   .intro-extra:nth-of-type(1) { --x: calc(var(--gutter) * .52);          --y: 30%; --r: -12deg; --d: .45s; }
   .intro-extra:nth-of-type(2) { --x: calc(var(--gutter) * .66);          --y: 87%; --r: 8deg;   --d: .6s;  }
-  .intro-extra:nth-of-type(3) { --x: calc(100% - var(--gutter) * .52);   --y: 12%; --r: 14deg;  --d: .75s; }
-  .intro-extra:nth-of-type(4) { --x: calc(100% - var(--gutter) * .62);   --y: 66%; --r: 7deg;   --d: .9s;  }
+  .intro-extra:nth-of-type(3) { --x: calc(100% - var(--gutter) * .58);   --y: 58%; --r: 10deg; --d: .75s; }
 
   /* printed running head above the title */
   .intro-eyebrow {
@@ -349,7 +348,6 @@
     .intro-extra:nth-of-type(1) { --x: 6%;  --y: 11%; --r: -14deg; }
     .intro-extra:nth-of-type(2) { --x: 14%; --y: 94%; --r: 9deg;   }
     .intro-extra:nth-of-type(3) { --x: 94%; --y: 13%; --r: 13deg;  }
-    .intro-extra:nth-of-type(4) { display: none; }   /* the ace sits these out */
   }
   @media (max-width: 700px) {
     .intro { min-height: 56vh; padding: 28px 20px; }
@@ -378,7 +376,6 @@
 
   <div class="stage" id="stage">
     <div class="intro" id="intro">
-      <div class="intro-extra"></div>
       <div class="intro-extra"></div>
       <div class="intro-extra"></div>
       <div class="intro-extra"></div>
@@ -825,10 +822,9 @@
     loadDeck().then(deck => {
       DECK = deck;
       [enc(BACKDROPS.ireland), enc(BACKDROPS.japan), ...deck.map(d => enc(DIR + d.file) + (d.v ? '?v=' + d.v : ''))].forEach(p => { const i = new Image(); i.src = p; });
-      // four of the deck scatter into the margins of the title page, the ace of
-      // clubs last (it's the one that sits the narrow layouts out)
+      // three of the deck scatter into the margins of the title page
       const ire = deck.filter(d => d.region === 'ireland'), jpn = deck.filter(d => d.region === 'japan');
-      const picks = [jpn[0], ire[5], jpn[10], ire.find(d => d.rank === 'A')];
+      const picks = [jpn[0], ire[5], ire.find(d => d.rank === 'A')];
       const introCards = document.querySelectorAll('.intro-extra');
       introCards.forEach((el, i) => {
         const card = picks[i] || deck[i];
