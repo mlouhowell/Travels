@@ -626,8 +626,12 @@
       if (!keepScroll) stage.scrollTop = introH();      // top of the deck, just below the title page
       const targets = sectionView(slots, 'scatter');   // sets up sections + scattered targets
       const sc = [...targets.values()][0]?.sc ?? 1;     // card scale for the current viewport
-      // stack in the middle of whatever the reader is currently looking at
-      const cx = innerWidth / 2, cy = stage.scrollTop + innerHeight / 2;
+      // Stack in the middle of the deck area the reader can actually see. The
+      // title page paints over the cards, so on the first deal — fired partway
+      // through it — the screen's own middle is still paper and half the riffle
+      // would happen behind it.
+      const cx = innerWidth / 2;
+      const cy = stage.scrollTop + (Math.max(0, introH() - stage.scrollTop) + innerHeight) / 2;
 
       // 1) collect to a face-down stack at center
       slots.forEach((s, i) => {
@@ -828,7 +832,7 @@
       shuffle(SLOTS, { keepScroll: true });
     }
     function onStageScroll() {
-      const past = stage.scrollTop > introH() * 0.3;
+      const past = stage.scrollTop > introH() * 0.4;
       document.body.classList.toggle('intro-view', !past);
       if (past) dealDeck();
     }
