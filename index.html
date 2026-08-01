@@ -102,12 +102,12 @@
     backface-visibility: hidden; -webkit-backface-visibility: hidden;
     border-radius: 6px; overflow: hidden;
     /* soft, even "scanned on paper" shadow */
-    box-shadow: 0 2px 5px rgba(0,0,0,.14), 0 8px 20px -6px rgba(0,0,0,.22);
+    box-shadow: 0 1px 3px rgba(0,0,0,.09), 0 6px 16px -8px rgba(0,0,0,.14);
     background: #fff;
     transition: box-shadow .4s ease;
   }
   /* while the deck is stacked/riffling, drop the shadow so overlaps don't compound into a dark blob */
-  .stage.shuffling .face { box-shadow: 0 2px 5px rgba(0,0,0,0), 0 8px 20px -6px rgba(0,0,0,0); }
+  .stage.shuffling .face { box-shadow: 0 1px 3px rgba(0,0,0,0), 0 6px 16px -8px rgba(0,0,0,0); }
   /* mid-deal a card isn't where it looks like it is, so it shouldn't take a
      click — but only the cards opt out, or the stage stops scrolling too */
   .stage.dealing .slot { pointer-events: none; }
@@ -203,7 +203,7 @@
     position: relative;
     width: 182px; height: 266px;        /* card design size; scaled to fit via JS */
     border-radius: 7px; overflow: hidden;
-    box-shadow: 0 30px 90px -20px rgba(0,0,0,.75);
+    box-shadow: 0 20px 60px -24px rgba(0,0,0,.45);
     transform: scale(.9);
     transition: transform .24s cubic-bezier(.2,.9,.3,1);
   }
@@ -306,7 +306,7 @@
     left: var(--x); top: var(--y);
     width: var(--cw); height: var(--ch);
     border-radius: 6px; overflow: hidden;
-    box-shadow: 0 3px 8px rgba(0,0,0,.14), 0 16px 36px -16px rgba(0,0,0,.3);
+    box-shadow: 0 2px 6px rgba(0,0,0,.10), 0 12px 28px -16px rgba(0,0,0,.2);
     pointer-events: none; opacity: 0;
     transform: translate(-50%, -50%) rotate(var(--r)) scale(calc(var(--card-sc) * .92));
     transition: opacity .8s ease, transform 1s cubic-bezier(.2,.8,.2,1);
@@ -629,7 +629,6 @@
       }
 
       // 3) deal out to each card's section target, one after another
-      stage.classList.remove('shuffling');   // shadows fade back in as the cards spread out
       const n = slots.length;
       const order = slots.map((_, i) => i).sort(() => rand(-1, 1));
       order.forEach((idx, k) => {
@@ -643,6 +642,9 @@
       });
       await delay(420 + n * 30 + 60);
 
+      // only now, with the pile spread out — lifted at the start of the deal the
+      // 26 still-stacked shadows compound into a black slab
+      stage.classList.remove('shuffling');
       slots.forEach(s => s.style.transition = '');
       stage.classList.remove('dealing');
       busy = false;
