@@ -329,11 +329,6 @@
   }
   .intro-title em { font-style: italic; }
 
-  .intro-meta {
-    font: 12px/1 'Space Mono', ui-monospace, monospace;
-    text-transform: uppercase; letter-spacing: .16em;
-    margin-top: clamp(24px, 5vh, 52px);
-  }
   /* one card from the deck laid over the type, the way a clipping sits on a
      printed page. Kept at true 182x266 and scaled whole, so the pips and
      caption stay in proportion with the real cards. */
@@ -355,13 +350,7 @@
 
   @media (max-width: 1100px) { .intro-card { --intro-card-sc: .66; right: -4%; } }
   @media (max-width: 700px) {
-    /* no room to overlap on a phone — the card tucks under the type instead,
-       between the headline and the date */
-    .intro-inner { display: flex; flex-direction: column; align-items: stretch; }
-    .intro-eyebrow { order: 1; }
-    .intro-title { order: 2; }
-    .intro-card { order: 3; }
-    .intro-meta { order: 4; }
+    /* no room to overlap on a phone — the card tucks under the type instead */
     .intro-card {
       position: relative; right: auto; top: auto;
       --intro-card-sc: .58;
@@ -401,11 +390,10 @@
       <div class="intro-inner">
         <div class="intro-eyebrow">
           <span class="mark-slot" data-mark="club"></span>
-          <span>[ Twenty-six cards, two suits ]</span>
+          <span>[ 2022 &mdash; 2026 ]</span>
           <span class="mark-slot" data-mark="diamond"></span>
         </div>
         <h1 class="intro-title">Noticings, <em>a</em> Photo Journal <em>of</em> Joyful Moments and Adventures Home <em>and</em> Abroad</h1>
-        <div class="intro-meta">2022 &mdash; 2026</div>
         <div class="intro-card" id="introCard"></div>
       </div>
     </div>
