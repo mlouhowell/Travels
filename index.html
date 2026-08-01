@@ -325,7 +325,6 @@
     opacity: 1;
     transform: translate(-50%, -50%) rotate(var(--r)) scale(var(--card-sc));
   }
-  @media (max-width: 700px)  { .intro-extra { display: none; } }   /* no margins to spare */
 
   /* printed running head above the title */
   .intro-eyebrow {
@@ -366,15 +365,16 @@
 
   @media (max-width: 1100px) { .intro { --card-sc: .46; } .intro-card { right: -4%; } }
   @media (max-width: 700px) {
-    /* no room to overlap on a phone — the card tucks under the type instead */
-    .intro { --card-sc: .58; }
-    .intro-card {
-      position: relative; right: auto; top: auto;
-      margin: calc(var(--ch) * -.19) auto calc(var(--ch) * -.2);
-      transform: rotate(-9deg) scale(calc(var(--card-sc) * .92));
-    }
-    .intro-card.in { transform: rotate(-4deg) scale(var(--card-sc)); }
+    /* A phone has no margins to lay cards in, and a card in the flow made the
+       page a screen and a half tall. The scattered three peek in from the edges
+       behind the type instead, and the ace sits this one out. */
+    .intro { --card-sc: .46; min-height: 56vh; padding: 28px 20px; }
+    .intro-card { display: none; }
+    .intro-eyebrow { margin-bottom: 18px; }
     .intro-title { font-size: clamp(34px, 11vw, 56px); }
+    .intro-extra:nth-of-type(1) { --x: -1%;  --y: 17%; --r: -14deg; }
+    .intro-extra:nth-of-type(2) { --x: 12%;  --y: 90%; --r: 9deg;   }
+    .intro-extra:nth-of-type(3) { --x: 101%; --y: 34%; --r: 13deg;  }
   }
 
   /* the title page stops short of the bottom of the screen, so the footer stays
@@ -513,8 +513,8 @@
 
     // The title page occupies the top of the scroll, a little short of a full
     // screen so the Ireland section peeks up from underneath.
-    const INTRO_RATIO = 0.66;
-    function sizeIntro() { intro.style.minHeight = Math.round(innerHeight * INTRO_RATIO) + 'px'; }
+    const introRatio = () => innerWidth <= 700 ? 0.56 : 0.66;   /* shorter on a phone */
+    function sizeIntro() { intro.style.minHeight = Math.round(innerHeight * introRatio()) + 'px'; }
     const introH = () => intro.offsetHeight;
     sizeIntro();
 
