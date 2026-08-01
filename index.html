@@ -338,22 +338,20 @@
   .intro-title {
     font-family: "Old Standard TT", Georgia, serif;
     font-weight: 400;
-    font-size: clamp(38px, 6.8vw, 108px);
-    line-height: .96;
-    letter-spacing: -.02em;
+    font-size: clamp(38px, 8.4vw, 120px);
+    line-height: .933;          /* 112 at 120 */
+    letter-spacing: -.033em;    /* -4 at 120 */
     text-wrap: balance;
   }
   .intro-title em { font-style: italic; }
 
   /* one card from the deck laid over the type, the way a clipping sits on a
      printed page. Kept at true 182x266 and scaled whole, so the pips and
-     caption stay in proportion with the real cards.
-     It multiplies with the type behind it — the card keeps its white over bare
-     paper, and the letters print straight through it where they meet. */
+     caption stay in proportion with the real cards. It sits out in the right
+     margin with the others — nothing crosses the type. */
   .intro-card {
     position: absolute;
-    mix-blend-mode: multiply;
-    right: 0; top: 66%;   /* sits at the short end of the last lines, not mid-word */
+    right: -12%; top: 62%;
     width: var(--cw); height: var(--ch);
     border-radius: 9px; overflow: hidden;
     box-shadow: 0 3px 8px rgba(0,0,0,.16), 0 18px 40px -14px rgba(0,0,0,.34);
@@ -409,7 +407,7 @@
       <div class="intro-extra" style="--x:14%; --y:88%; --r:8deg;   --d:.6s"></div>
       <div class="intro-extra" style="--x:93%; --y:11%; --r:14deg;  --d:.75s"></div>
       <div class="intro-inner">
-        <div class="intro-eyebrow">[ 2022 &mdash; 2026 ]</div>
+        <div class="intro-eyebrow">2022 &mdash; 2026</div>
         <h1 class="intro-title">A Photo Journal <em>of</em> Joyful Moments and Adventures Home <em>and</em> Abroad</h1>
         <div class="intro-card" id="introCard"></div>
       </div>
