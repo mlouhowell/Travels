@@ -19,7 +19,7 @@
 <meta name="twitter:image" content="https://travels.mary-louise.com/preview.jpg" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Geist:wght@400;500&family=Old+Standard+TT:ital,wght@0,400;0,700;1,400&family=Space+Mono&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Old+Standard+TT:ital,wght@0,400;0,700;1,400&family=Space+Mono&display=swap" rel="stylesheet" />
 <style>
   :root {
     --felt: #cfe0c4;
@@ -27,6 +27,8 @@
     --ink: #123617;
     --cw: 182px;        /* card width */
     --ch: 266px;        /* card height (~0.686 ratio) */
+    --paper: #EFEDE7;   /* intro page stock */
+    --paper-ink: #2D2D2D;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -63,8 +65,8 @@
     color: #fff; pointer-events: none;
   }
   .section-title .eyebrow {
-    font-family: "Geist", system-ui, sans-serif;
-    text-transform: uppercase; font-weight: 400; font-size: 13px; letter-spacing: -.2px;
+    font-family: "Space Mono", ui-monospace, monospace;
+    text-transform: uppercase; font-weight: 400; font-size: 13px; letter-spacing: .14em;
     margin-bottom: 14px;
   }
   .section-title .title-main {
@@ -177,6 +179,7 @@
     background: rgba(20,40,28,.5); border: 1px solid rgba(255,255,255,.3);
     padding: 9px 14px; border-radius: 999px;
     font-size: 12px; color: #fff; backdrop-filter: blur(8px);
+    transition: opacity .3s ease;
   }
   .controls button {
     font: inherit; color: #fff; background: transparent;
@@ -286,6 +289,99 @@
     }
   }
 
+  /* ---------- INTRO (title page) ---------- */
+  /* A printed title page: paper stock, mono metadata, one big serif line.
+     Sits above everything until dismissed, then hands over to the shuffle. */
+  /* It lives inside the scrolling stage rather than over it, so it stays part
+     of the page — scroll down to the deck, scroll back up to the title page.
+     Height is set from innerHeight in JS (a little under a full screen, so the
+     Ireland section peeks up from below). */
+  .intro {
+    position: absolute; top: 0; left: 0; right: 0; z-index: 400;
+    --card-sc: .6;      /* every card on the title page is dealt at one size */
+    min-height: 66vh;   /* grows if the type needs more room than that */
+    background: var(--paper);
+    color: var(--paper-ink);
+    display: grid; place-items: center;
+    padding: 40px 24px;
+    text-align: center;
+  }
+  .intro-inner { position: relative; z-index: 2; max-width: 1180px; width: 100%; }
+
+  /* a few more of the deck scattered into the margins, bleeding off the edges.
+     They sit behind the type (z-index 1) so the line always reads over them. */
+  .intro-extra {
+    position: absolute; z-index: 1;
+    left: var(--x); top: var(--y);
+    width: var(--cw); height: var(--ch);
+    border-radius: 9px; overflow: hidden;
+    box-shadow: 0 3px 8px rgba(0,0,0,.14), 0 16px 36px -16px rgba(0,0,0,.3);
+    pointer-events: none; opacity: 0;
+    transform: translate(-50%, -50%) rotate(var(--r)) scale(calc(var(--card-sc) * .92));
+    transition: opacity .8s ease, transform 1s cubic-bezier(.2,.8,.2,1);
+    transition-delay: var(--d, 0s);
+  }
+  .intro-extra.in {
+    opacity: 1;
+    transform: translate(-50%, -50%) rotate(var(--r)) scale(var(--card-sc));
+  }
+
+  /* printed running head above the title */
+  .intro-eyebrow {
+    font: 13px/1 'Space Mono', ui-monospace, monospace;   /* same as the section eyebrows */
+    text-transform: uppercase; letter-spacing: .14em;
+    margin-bottom: clamp(20px, 4vh, 40px);
+  }
+
+  /* the big line — Old Standard TT, set as tight as the reference */
+  .intro-title {
+    font-family: "Old Standard TT", Georgia, serif;
+    font-weight: 400;
+    font-size: clamp(38px, 8.4vw, 120px);
+    line-height: .933;          /* 112 at 120 */
+    letter-spacing: -.033em;    /* -4 at 120 */
+    text-wrap: balance;
+  }
+  .intro-title em { font-style: italic; }
+
+  /* one card from the deck laid over the type, the way a clipping sits on a
+     printed page. Kept at true 182x266 and scaled whole, so the pips and
+     caption stay in proportion with the real cards. It sits out in the right
+     margin with the others — nothing crosses the type. */
+  .intro-card {
+    position: absolute;
+    right: -12%; top: 62%;
+    width: var(--cw); height: var(--ch);
+    border-radius: 9px; overflow: hidden;
+    box-shadow: 0 3px 8px rgba(0,0,0,.16), 0 18px 40px -14px rgba(0,0,0,.34);
+    pointer-events: none; opacity: 0;
+    transform: translateY(-50%) rotate(13deg) scale(calc(var(--card-sc) * .92));
+    transition: opacity .7s ease, transform .9s cubic-bezier(.2,.8,.2,1);
+  }
+  .intro-card.in {
+    opacity: 1;
+    transform: translateY(-50%) rotate(7deg) scale(var(--card-sc));
+  }
+
+  @media (max-width: 1100px) { .intro { --card-sc: .46; } .intro-card { right: -4%; } }
+  @media (max-width: 700px) {
+    /* A phone has no margins to lay cards in, and a card in the flow made the
+       page a screen and a half tall. The scattered three peek in from the edges
+       behind the type instead, and the ace sits this one out. */
+    .intro { --card-sc: .46; min-height: 56vh; padding: 28px 20px; }
+    .intro-card { display: none; }
+    .intro-eyebrow { margin-bottom: 18px; }
+    .intro-title { font-size: clamp(34px, 11vw, 56px); }
+    .intro-extra:nth-of-type(1) { --x: -1%;  --y: 17%; --r: -14deg; }
+    .intro-extra:nth-of-type(2) { --x: 12%;  --y: 90%; --r: 9deg;   }
+    .intro-extra:nth-of-type(3) { --x: 101%; --y: 34%; --r: 13deg;  }
+  }
+
+  /* the title page stops short of the bottom of the screen, so the footer stays
+     white over the section band below it; the deck controls keep out of the way
+     until you've scrolled to the cards */
+  body.intro-view .controls { opacity: 0; pointer-events: none; }
+
   /* ---------- standard ML Howell footer ---------- */
   #footer {
     position: fixed;
@@ -300,12 +396,23 @@
   @media (prefers-reduced-motion: reduce) { .slot, .card { transition: none; animation: none; } }
 </style>
 </head>
-<body>
+<body class="intro-view">
 
   <div class="bg show" id="bg-ireland" style="background-image:url('backdrop.webp')"></div>
   <div class="bg" id="bg-japan" style="background-image:url('backdrop-japan.webp')"></div>
 
-  <div class="stage" id="stage"></div>
+  <div class="stage" id="stage">
+    <div class="intro" id="intro">
+      <div class="intro-extra" style="--x:5%;  --y:32%; --r:-12deg; --d:.45s"></div>
+      <div class="intro-extra" style="--x:14%; --y:88%; --r:8deg;   --d:.6s"></div>
+      <div class="intro-extra" style="--x:93%; --y:11%; --r:14deg;  --d:.75s"></div>
+      <div class="intro-inner">
+        <div class="intro-eyebrow">2022 &mdash; 2026</div>
+        <h1 class="intro-title">A Photo Journal <em>of</em> Joyful Moments and Adventures Home <em>and</em> Abroad</h1>
+        <div class="intro-card" id="introCard"></div>
+      </div>
+    </div>
+  </div>
 
   <div class="controls">
     <button id="ordered">Ordered</button>
@@ -315,7 +422,7 @@
 
   <div class="modal" id="modal"><div class="modal-nav" id="modalNav"></div><div class="modal-inner" id="modalInner"></div></div>
 
-  <div id="footer"><a href="https://mary-louise.com" target="_blank" rel="noopener">By ML Howell</a> · V1.1 · June 2026</div>
+  <div id="footer"><a href="https://mary-louise.com" target="_blank" rel="noopener">By ML Howell</a> · V1.2 · July 2026</div>
 
   <script>
     const DIR  = "photos/";
@@ -400,8 +507,16 @@
       </div>`;
 
     const stage = document.getElementById('stage');
+    const intro = document.getElementById('intro');
     let topZ = 100;
     let busy = false;
+
+    // The title page occupies the top of the scroll, a little short of a full
+    // screen so the Ireland section peeks up from underneath.
+    const introRatio = () => innerWidth <= 700 ? 0.56 : 0.66;   /* shorter on a phone */
+    function sizeIntro() { intro.style.minHeight = Math.round(innerHeight * introRatio()) + 'px'; }
+    const introH = () => intro.offsetHeight;
+    sizeIntro();
 
     const CW = 182, CH = 266;
     let gridScrollHandler = null;
@@ -458,7 +573,7 @@
         }
       }
 
-      let y = topPad;
+      let y = introH() + topPad;
       sectionTitle('titleIreland', 'Various dates, 2022–2026', 'Ireland', y);
       y = place(ire, y + headerH);
       y += sectionGap;
@@ -499,17 +614,24 @@
 
     const delay = ms => new Promise(r => setTimeout(r, ms));
 
-    // gather into a stack -> riffle -> deal out into the two scattered sections
-    async function shuffle(slots) {
+    // gather into a stack -> riffle -> deal out into the two scattered sections.
+    // keepScroll: leave the reader where they are (used for the first deal, which
+    // fires as they scroll off the title page).
+    async function shuffle(slots, { keepScroll = false } = {}) {
       if (busy) return;
       busy = true;
       currentView = 'scatter';
       stage.style.pointerEvents = 'none';
       stage.classList.add('shuffling');                 // suppress compounding shadows while stacked
-      stage.scrollTop = 0;
+      if (!keepScroll) stage.scrollTop = introH();      // top of the deck, just below the title page
       const targets = sectionView(slots, 'scatter');   // sets up sections + scattered targets
       const sc = [...targets.values()][0]?.sc ?? 1;     // card scale for the current viewport
-      const cx = innerWidth / 2, cy = innerHeight / 2;
+      // Stack in the middle of the deck area the reader can actually see. The
+      // title page paints over the cards, so on the first deal — fired partway
+      // through it — the screen's own middle is still paper and half the riffle
+      // would happen behind it.
+      const cx = innerWidth / 2;
+      const cy = stage.scrollTop + (Math.max(0, introH() - stage.scrollTop) + innerHeight) / 2;
 
       // 1) collect to a face-down stack at center
       slots.forEach((s, i) => {
@@ -564,7 +686,7 @@
     }
 
     function build(deck) {
-      stage.innerHTML = '';
+      stage.querySelectorAll('.slot').forEach(s => s.remove());   // keep the intro + spacer
       const slots = deck.map((c, i) => {
         const slot = document.createElement('div');
         slot.className = 'slot';
@@ -589,17 +711,24 @@
         stage.appendChild(slot);
         return slot;
       });
-      // stack the deck face-down in the center, then play the shuffle as the loading intro
-      const cx = innerWidth / 2, cy = innerHeight / 2;
+      // Lay out the sections (this gives the stage its scroll height and titles)
+      // but hold the cards in a face-down stack below the title page — the deal
+      // plays when the reader scrolls down to it.
+      sectionView(slots, 'scatter');
+      stackDeck(slots);
+      setRegion('ireland');
+      return slots;
+    }
+
+    // face-down stack, centred in the deck area just below the title page
+    function stackDeck(slots) {
+      const cx = innerWidth / 2, cy = introH() + innerHeight / 2;
       slots.forEach((s, i) => {
         s.style.left = cx + 'px'; s.style.top = cy + 'px';
         s.style.setProperty('--rot', rand(-2, 2).toFixed(1) + 'deg');
         s.style.setProperty('--sc', '1');
         s.style.zIndex = i;
       });
-      setRegion('ireland');
-      shuffle(slots);
-      return slots;
     }
 
     let SLOTS = [], DECK = [];
@@ -613,7 +742,12 @@
     window.addEventListener('resize', () => {
       if (busy || !SLOTS.length) return;
       clearTimeout(resizeTimer);
-      resizeTimer = setTimeout(() => { if (!busy) applyTargets(sectionView(SLOTS, currentView)); }, 160);
+      resizeTimer = setTimeout(() => {
+        if (busy) return;
+        sizeIntro();
+        const targets = sectionView(SLOTS, currentView);
+        dealt ? applyTargets(targets) : stackDeck(SLOTS);   // don't deal early on a resize
+      }, 160);
     });
 
     // ---------- modal (enlarged card, keeps its color treatment) ----------
@@ -687,10 +821,44 @@
     });
     window.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
 
+    // ---------- intro (title page) ----------
+    // The title page stays put — you scroll past it to the deck and back up to
+    // it. The deal fires once, the first time you head down.
+    let dealt = false, dealPending = false;
+    function dealDeck() {
+      if (dealt) return;
+      if (!SLOTS.length) { dealPending = true; return; }   // scrolled before the deck loaded
+      dealt = true;
+      shuffle(SLOTS, { keepScroll: true });
+    }
+    function onStageScroll() {
+      const past = stage.scrollTop > introH() * 0.4;
+      document.body.classList.toggle('intro-view', !past);
+      if (past) dealDeck();
+    }
+    stage.addEventListener('scroll', onStageScroll, { passive: true });
+
     loadDeck().then(deck => {
       DECK = deck;
       [enc(BACKDROPS.ireland), enc(BACKDROPS.japan), ...deck.map(d => enc(DIR + d.file) + (d.v ? '?v=' + d.v : ''))].forEach(p => { const i = new Image(); i.src = p; });
+      // the ace of clubs deals itself onto the title page, with a few more of
+      // the deck scattered into the margins behind the type
+      const introCard = document.getElementById('introCard');
+      const c = deck.find(d => d.region === 'ireland' && d.rank === 'A') || deck[0];
+      introCard.innerHTML = cardFaceHTML(c);
+      const ire = deck.filter(d => d.region === 'ireland'), jpn = deck.filter(d => d.region === 'japan');
+      const extras = [jpn[0], ire[5], jpn[10]];
+      document.querySelectorAll('.intro-extra').forEach((el, i) => {
+        const card = extras[i] || deck[i];
+        if (card) el.innerHTML = cardFaceHTML(card);
+      });
+      requestAnimationFrame(() => {
+        introCard.classList.add('in');
+        document.querySelectorAll('.intro-extra').forEach(el => el.classList.add('in'));
+      });
       SLOTS = build(deck);
+      onStageScroll();                                    // deal now if they already scrolled down
+      if (dealPending) dealDeck();
     });
   </script>
 </body>
