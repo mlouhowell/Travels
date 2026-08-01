@@ -281,7 +281,7 @@
        side of it. Both are measured off the same gutter, so they can't collide
        at any width — a percentage alone drifts, because the line grows with vw
        while the card position doesn't. */
-    --title-w: min(1180px, 100vw - 340px);   /* vw, not %, or it resolves
+    --title-w: min(640px, 100vw - 470px);   /* vw, not %, or it resolves
                                              against a different box in each use */
     --gutter: calc((100% - var(--title-w)) / 2);
     min-height: 66vh;   /* grows if the type needs more room than that */
@@ -317,9 +317,9 @@
     transform: translate(-50%, -50%) rotate(var(--r)) scale(var(--card-sc));
   }
   /* in CSS rather than inline, so the narrower rules below can move them */
-  .intro-extra:nth-of-type(1) { --x: calc(var(--gutter) * .76);          --y: 30%; --r: -12deg; --d: .45s; }
-  .intro-extra:nth-of-type(2) { --x: calc(var(--gutter) * .88);          --y: 87%; --r: 8deg;   --d: .6s;  }
-  .intro-extra:nth-of-type(3) { --x: calc(100% - var(--gutter) * .82);   --y: 58%; --r: 10deg; --d: .75s; }
+  .intro-extra:nth-of-type(1) { --x: calc(var(--gutter) - 88px);        --y: 30%; --r: -12deg; --d: .45s; }
+  .intro-extra:nth-of-type(2) { --x: calc(var(--gutter) - 74px);        --y: 87%; --r: 8deg;   --d: .6s;  }
+  .intro-extra:nth-of-type(3) { --x: calc(100% - var(--gutter) + 88px); --y: 58%; --r: 10deg; --d: .75s; }
 
   /* pencil sketches laid in with the cards — above them, still under the type */
   .intro-sketch {
@@ -331,8 +331,9 @@
     pointer-events: none;
     animation: fade 1.1s ease var(--d) both;
   }
-  .sketch-bloom { --x: calc(100% - var(--gutter) * .80); --y: 21%; --w: 164px; --r: -7deg; --d: .9s;  }
-  .sketch-stem  { --x: calc(var(--gutter) * .86);        --y: 66%; --w: 152px; --r: 9deg;  --d: 1.05s; }
+  .sketch-bloom { --x: calc(100% - var(--gutter) + 104px); --y: 21%; --w: 164px; --r: -7deg; --d: .9s;  }
+  .sketch-stem  { --x: calc(var(--gutter) - 134px);      --y: 66%; --w: 152px; --r: 9deg;  --d: 1.05s;
+                  z-index: 0; }   /* behind the card, not over it */
 
   /* printed running head above the title */
   .intro-eyebrow {
@@ -346,9 +347,9 @@
     max-width: var(--title-w); margin-inline: auto;
     font-family: "Old Standard TT", Georgia, serif;
     font-weight: 400;
-    font-size: clamp(38px, 8.4vw, 120px);
-    line-height: .9;            /* 108 at 120 */
-    letter-spacing: -.033em;    /* -4 at 120 */
+    font-size: clamp(38px, 8.4vw, 78px);
+    line-height: 1.026;         /* 80 at 78 */
+    letter-spacing: -.045em;    /* -4 at 88 */
     text-wrap: balance;
   }
   .intro-title em { font-style: italic; }
@@ -398,14 +399,14 @@
       <img class="intro-sketch sketch-stem" src="sketches/flower-stem.png" alt="" />
       <div class="intro-inner">
         <div class="intro-eyebrow">2022 &mdash; 2026</div>
-        <h1 class="intro-title">A Photo Journal <em>of</em> Joyful Moments and Adventures Home <em>and</em> Abroad</h1>
+        <h1 class="intro-title">A Photo Journal <em>of</em> Joyful Moments</h1>
       </div>
     </div>
   </div>
 
   <div class="modal" id="modal"><div class="modal-nav" id="modalNav"></div><div class="modal-inner" id="modalInner"></div></div>
 
-  <div id="footer"><a href="https://mary-louise.com" target="_blank" rel="noopener">By ML Howell</a> · V2.1 · July 2026</div>
+  <div id="footer"><a href="https://mary-louise.com" target="_blank" rel="noopener">By ML Howell</a> · V2.2 · August 2026</div>
 
   <script>
     const DIR  = "photos/";
