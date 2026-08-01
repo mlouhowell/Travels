@@ -32,7 +32,7 @@
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  html, body { height: 100%; }
+  html, body { height: 100%; overscroll-behavior: none; }
 
   body {
     background: var(--felt);
@@ -58,7 +58,10 @@
 
   /* ---------- SCATTER STAGE ---------- */
   .stage { position: fixed; inset: 0; z-index: 2; }
-  .stage.grid { overflow-y: auto; overflow-x: hidden; }
+  /* overscroll-behavior: the backdrops are fixed and the deck scrolls over
+     them, so a rubber-band drag at either end slides the whole page off its
+     own background */
+  .stage.grid { overflow-y: auto; overflow-x: hidden; overscroll-behavior: none; }
   .grid-spacer { width: 100%; height: 0; pointer-events: none; }
   .section-title {
     position: absolute; left: 0; right: 0; text-align: center;
@@ -316,6 +319,12 @@
     padding: 40px 24px;
     text-align: center;
   }
+  /* the paper carries on above the top of the page, so if a browser bounces
+     anyway there's more of it up there rather than the green backdrop */
+  .intro::before {
+    content: ""; position: absolute; left: 0; right: 0; bottom: 100%;
+    height: 100vh; background: var(--paper);
+  }
   .intro-inner { position: relative; z-index: 2; max-width: 1180px; width: 100%; }
 
   /* a few more of the deck scattered into the margins, bleeding off the edges.
@@ -421,7 +430,7 @@
 
   <div class="modal" id="modal"><div class="modal-nav" id="modalNav"></div><div class="modal-inner" id="modalInner"></div></div>
 
-  <div id="footer"><a href="https://mary-louise.com" target="_blank" rel="noopener">By ML Howell</a> · V1.3 · July 2026</div>
+  <div id="footer"><a href="https://mary-louise.com" target="_blank" rel="noopener">By ML Howell</a> · V1.4 · July 2026</div>
 
   <script>
     const DIR  = "photos/";
