@@ -100,7 +100,7 @@
   .face {
     position: absolute; inset: 0;
     backface-visibility: hidden; -webkit-backface-visibility: hidden;
-    border-radius: 9px; overflow: hidden;
+    border-radius: 6px; overflow: hidden;
     /* soft, even "scanned on paper" shadow */
     box-shadow: 0 2px 5px rgba(0,0,0,.14), 0 8px 20px -6px rgba(0,0,0,.22);
     background: #fff;
@@ -216,7 +216,7 @@
   .modal-inner {
     position: relative;
     width: 182px; height: 266px;        /* card design size; scaled to fit via JS */
-    border-radius: 10px; overflow: hidden;
+    border-radius: 7px; overflow: hidden;
     box-shadow: 0 30px 90px -20px rgba(0,0,0,.75);
     transform: scale(.9);
     transition: transform .24s cubic-bezier(.2,.9,.3,1);
@@ -319,7 +319,7 @@
     position: absolute; z-index: 1;
     left: var(--x); top: var(--y);
     width: var(--cw); height: var(--ch);
-    border-radius: 9px; overflow: hidden;
+    border-radius: 6px; overflow: hidden;
     box-shadow: 0 3px 8px rgba(0,0,0,.14), 0 16px 36px -16px rgba(0,0,0,.3);
     pointer-events: none; opacity: 0;
     transform: translate(-50%, -50%) rotate(var(--r)) scale(calc(var(--card-sc) * .92));
