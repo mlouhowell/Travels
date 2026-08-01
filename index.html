@@ -307,22 +307,18 @@
   }
   .intro-inner { position: relative; max-width: 1180px; width: 100%; }
 
-  /* mono rules that bracket the section label, like a printed running head */
+  /* printed running head above the title */
   .intro-eyebrow {
-    display: flex; align-items: center; justify-content: center; gap: 14px;
     font: 13px/1 'Space Mono', ui-monospace, monospace;   /* same as the section eyebrows */
     text-transform: uppercase; letter-spacing: .14em;
     margin-bottom: clamp(20px, 4vh, 40px);
   }
-  .intro-eyebrow .mark { width: 12px; height: auto; opacity: .8; }
-  .intro-eyebrow .mark.club { color: #0A0A0A; }
-  .intro-eyebrow .mark.diamond { color: #D23934; }
 
   /* the big line — Old Standard TT, set as tight as the reference */
   .intro-title {
     font-family: "Old Standard TT", Georgia, serif;
     font-weight: 400;
-    font-size: clamp(36px, 6.6vw, 104px);
+    font-size: clamp(38px, 6.8vw, 108px);
     line-height: .96;
     letter-spacing: -.02em;
     text-wrap: balance;
@@ -388,12 +384,8 @@
   <div class="stage" id="stage">
     <div class="intro" id="intro">
       <div class="intro-inner">
-        <div class="intro-eyebrow">
-          <span class="mark-slot" data-mark="club"></span>
-          <span>[ 2022 &mdash; 2026 ]</span>
-          <span class="mark-slot" data-mark="diamond"></span>
-        </div>
-        <h1 class="intro-title">Noticings, <em>a</em> Photo Journal <em>of</em> Joyful Moments and Adventures Home <em>and</em> Abroad</h1>
+        <div class="intro-eyebrow">[ 2022 &mdash; 2026 ]</div>
+        <h1 class="intro-title">A Photo Journal <em>of</em> Joyful Moments and Adventures Home <em>and</em> Abroad</h1>
         <div class="intro-card" id="introCard"></div>
       </div>
     </div>
@@ -803,11 +795,6 @@
     window.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
 
     // ---------- intro (title page) ----------
-    intro.querySelectorAll('.mark-slot').forEach(el => {
-      const svg = el.dataset.mark === 'club' ? CLUB : DIAMOND;
-      el.innerHTML = svg.replace('class="club"', `class="mark ${el.dataset.mark}"`);
-    });
-
     // The title page stays put — you scroll past it to the deck and back up to
     // it. The deal fires once, the first time you head down.
     let dealt = false, dealPending = false;
