@@ -305,7 +305,28 @@
     padding: 40px 24px;
     text-align: center;
   }
-  .intro-inner { position: relative; max-width: 1180px; width: 100%; }
+  .intro-inner { position: relative; z-index: 2; max-width: 1180px; width: 100%; }
+
+  /* a few more of the deck scattered into the margins, bleeding off the edges.
+     They sit behind the type (z-index 1) so the line always reads over them. */
+  .intro-extra {
+    position: absolute; z-index: 1;
+    left: var(--x); top: var(--y);
+    width: var(--cw); height: var(--ch);
+    --k: 1;                                  /* viewport size multiplier */
+    border-radius: 9px; overflow: hidden;
+    box-shadow: 0 3px 8px rgba(0,0,0,.14), 0 16px 36px -16px rgba(0,0,0,.3);
+    pointer-events: none; opacity: 0;
+    transform: translate(-50%, -50%) rotate(var(--r)) scale(calc(var(--s) * var(--k) * .92));
+    transition: opacity .8s ease, transform 1s cubic-bezier(.2,.8,.2,1);
+    transition-delay: var(--d, 0s);
+  }
+  .intro-extra.in {
+    opacity: 1;
+    transform: translate(-50%, -50%) rotate(var(--r)) scale(calc(var(--s) * var(--k)));
+  }
+  @media (max-width: 1100px) { .intro-extra { --k: .74; } }
+  @media (max-width: 700px)  { .intro-extra { display: none; } }   /* no margins to spare */
 
   /* printed running head above the title */
   .intro-eyebrow {
@@ -383,6 +404,9 @@
 
   <div class="stage" id="stage">
     <div class="intro" id="intro">
+      <div class="intro-extra" style="--x:5%;  --y:32%;  --r:-12deg; --s:.56; --d:.45s"></div>
+      <div class="intro-extra" style="--x:14%; --y:88%;  --r:8deg;   --s:.46; --d:.6s"></div>
+      <div class="intro-extra" style="--x:93%; --y:11%;  --r:14deg;  --s:.5;  --d:.75s"></div>
       <div class="intro-inner">
         <div class="intro-eyebrow">[ 2022 &mdash; 2026 ]</div>
         <h1 class="intro-title">A Photo Journal <em>of</em> Joyful Moments and Adventures Home <em>and</em> Abroad</h1>
@@ -814,11 +838,21 @@
     loadDeck().then(deck => {
       DECK = deck;
       [enc(BACKDROPS.ireland), enc(BACKDROPS.japan), ...deck.map(d => enc(DIR + d.file) + (d.v ? '?v=' + d.v : ''))].forEach(p => { const i = new Image(); i.src = p; });
-      // the ace of clubs deals itself onto the title page
+      // the ace of clubs deals itself onto the title page, with a few more of
+      // the deck scattered into the margins behind the type
       const introCard = document.getElementById('introCard');
       const c = deck.find(d => d.region === 'ireland' && d.rank === 'A') || deck[0];
       introCard.innerHTML = cardFaceHTML(c);
-      requestAnimationFrame(() => introCard.classList.add('in'));
+      const ire = deck.filter(d => d.region === 'ireland'), jpn = deck.filter(d => d.region === 'japan');
+      const extras = [jpn[0], ire[5], jpn[10]];
+      document.querySelectorAll('.intro-extra').forEach((el, i) => {
+        const card = extras[i] || deck[i];
+        if (card) el.innerHTML = cardFaceHTML(card);
+      });
+      requestAnimationFrame(() => {
+        introCard.classList.add('in');
+        document.querySelectorAll('.intro-extra').forEach(el => el.classList.add('in'));
+      });
       SLOTS = build(deck);
       onStageScroll();                                    // deal now if they already scrolled down
       if (dealPending) dealDeck();
