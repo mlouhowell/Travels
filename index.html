@@ -188,31 +188,6 @@
     font-size: 9px; line-height: .82; color: #0A0A0A;
   }
 
-  /* ---------- CONTROLS ---------- */
-  .controls {
-    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
-    z-index: 5;
-    display: flex; align-items: center; gap: 12px;
-    background: rgba(20,40,28,.5); border: 1px solid rgba(255,255,255,.3);
-    padding: 9px 14px; border-radius: 999px;
-    font-size: 12px; color: #fff; backdrop-filter: blur(8px);
-    transition: opacity .3s ease;
-  }
-  .controls button {
-    font: inherit; color: #fff; background: transparent;
-    border: 1px solid rgba(255,255,255,.5); border-radius: 999px;
-    padding: 5px 12px; cursor: pointer;
-  }
-  .controls button:hover { background: rgba(255,255,255,.16); }
-
-  @media (max-width: 600px) {
-    .controls {
-      left: 16px; right: 16px; transform: none;
-      justify-content: space-between;
-    }
-    .controls button { flex: 1; text-align: center; }
-  }
-
   /* ---------- MODAL (enlarged card) ---------- */
   .modal {
     position: fixed; inset: 0; z-index: 1000;
@@ -382,11 +357,6 @@
     .intro-title { font-size: clamp(34px, 11vw, 56px); }
   }
 
-  /* the title page stops short of the bottom of the screen, so the footer stays
-     white over the section band below it; the deck controls keep out of the way
-     until you've scrolled to the cards */
-  body.intro-view .controls { opacity: 0; pointer-events: none; }
-
   /* ---------- standard ML Howell footer ---------- */
   #footer {
     position: fixed;
@@ -401,7 +371,7 @@
   @media (prefers-reduced-motion: reduce) { .slot, .card { transition: none; animation: none; } }
 </style>
 </head>
-<body class="intro-view">
+<body>
 
   <div class="bg show" id="bg-ireland" style="background-image:url('backdrop.webp')"></div>
   <div class="bg" id="bg-japan" style="background-image:url('backdrop-japan.webp')"></div>
@@ -417,12 +387,6 @@
         <h1 class="intro-title">A Photo Journal <em>of</em> Joyful Moments and Adventures Home <em>and</em> Abroad</h1>
       </div>
     </div>
-  </div>
-
-  <div class="controls">
-    <button id="ordered">Ordered</button>
-    <button id="reshuffle">Reshuffle</button>
-    <button id="flipdown">Flip up</button>
   </div>
 
   <div class="modal" id="modal"><div class="modal-nav" id="modalNav"></div><div class="modal-inner" id="modalInner"></div></div>
@@ -614,11 +578,6 @@
         s.style.zIndex = ++z;
       });
     }
-    function ordered(slots) {
-      currentView = 'grid';
-      applyTargets(sectionView(slots, 'grid'));
-    }
-
     const delay = ms => new Promise(r => setTimeout(r, ms));
 
     // gather into a stack -> riffle -> deal out into the two scattered sections.
@@ -739,10 +698,6 @@
     }
 
     let SLOTS = [], DECK = [];
-    document.getElementById('ordered').addEventListener('click', () => ordered(SLOTS));
-    document.getElementById('reshuffle').addEventListener('click', () => shuffle(SLOTS));
-    document.getElementById('flipdown').addEventListener('click', () =>
-      SLOTS.forEach(s => s.querySelector('.card').classList.add('flipped')));
 
     // re-lay-out (recompute columns/scale/centering) when the window is resized
     let resizeTimer;
@@ -863,9 +818,7 @@
       shuffle(SLOTS, { keepScroll: true });
     }
     function onStageScroll() {
-      const past = stage.scrollTop > introH() * 0.4;
-      document.body.classList.toggle('intro-view', !past);
-      if (past) dealDeck();
+      if (stage.scrollTop > introH() * 0.4) dealDeck();
     }
     stage.addEventListener('scroll', onStageScroll, { passive: true });
 
